@@ -64,6 +64,13 @@ internal enum class ContentControl(val owner: TrioSettingsPart) {
     MergeIcons(TrioSettingsPart.Appearance),
     Style(TrioSettingsPart.Appearance),
     AntiBurnIn(TrioSettingsPart.Appearance),
+    /**
+     * 息屏（AOD）是否沿用本模块状态栏；见 [Prefs.KEY_AOD_NATIVE_BAR]。
+     *
+     * 与 `AntiBurnIn` 一样落在排布页顶部的功能区：它管的是整条状态栏在息屏期间的
+     * 归属，不属于任何一件组件，弹层里也没有这一行。
+     */
+    AodNativeBar(TrioSettingsPart.Appearance),
     SignalColumns(TrioSettingsPart.Mobile),
     Wifi(TrioSettingsPart.Wifi),
     ReplaceWifiIcon(TrioSettingsPart.Wifi),
@@ -237,7 +244,8 @@ internal fun contentControlsFor(part: TrioSettingsPart): List<ContentControl> =
         matchesOwner && !(part == TrioSettingsPart.Appearance &&
             (it == ContentControl.Enabled || it == ContentControl.HarmonyStacked ||
                 it == ContentControl.MergeIcons || it == ContentControl.Style ||
-                it == ContentControl.AntiBurnIn || it == ContentControl.EffectiveScope))
+                it == ContentControl.AntiBurnIn || it == ContentControl.AodNativeBar ||
+                it == ContentControl.EffectiveScope))
     }
 
 /**
@@ -262,6 +270,7 @@ internal fun ContentControl.searchLabel(): ContentSearchLabel? = when (this) {
     ContentControl.MergeIcons,
     ContentControl.Style,
     ContentControl.AntiBurnIn,
+    ContentControl.AodNativeBar,
     ContentControl.EffectiveScope -> null
     ContentControl.SignalColumns -> ContentSearchLabel(R.string.signal_columns_title, R.string.signal_columns_summary)
     ContentControl.Wifi -> ContentSearchLabel(R.string.ring_position_wifi)
@@ -409,6 +418,29 @@ private fun ContentControlRowBody(
             summaryRes = R.string.anti_burn_in_summary,
             dependencies = emptyList(),
         ) { value -> update { it.setAntiBurnIn(value) } }
+        ContentControl.AodNativeBar -> {
+            var confirming by remember { mutableStateOf(false) }
+            ContentToggle(
+                checked = settings.aodNativeBar,
+                title = R.string.aod_native_bar_title,
+                summaryRes = R.string.aod_native_bar_summary,
+                dependencies = master,
+            ) { value ->
+                // 只在「关闭」方向确认：开启是回到默认行为，没有代价可提示。
+                if (value) update { it.setAodNativeBar(true) } else confirming = true
+            }
+            SwitchOffConfirm(
+                show = confirming,
+                titleRes = R.string.aod_native_bar_confirm_title,
+                summaryRes = R.string.aod_native_bar_confirm_summary,
+                actionRes = R.string.aod_native_bar_confirm_action,
+                onDismiss = { confirming = false },
+                onConfirm = {
+                    confirming = false
+                    update { it.setAodNativeBar(false) }
+                },
+            )
+        }
         // 4柱/5柱对「双排信号」同样生效（双排就是这组柱子本身），所以双排开着时不能藏起来，
         // 否则这个设置找不到入口，只能继承上次的值。
         ContentControl.SignalColumns -> if (a.dualSignal || a.stackedOut()) {
@@ -934,6 +966,47 @@ private fun MutuallyExclusiveConfirm(
                 modifier = Modifier.weight(1f),
             ) {
                 Text(stringResource(R.string.exclusive_switch_confirm_action))
+            }
+        }
+    }
+}
+
+/**
+ * 关闭一项有代价的开关前的确认：说明代价，确认才写入，取消保持开启。
+ *
+ * 与 [MutuallyExclusiveConfirm] 同样复用 [OverlayDialog]，只是文案不是「互斥」
+ * 而是「这么做会失去什么」，所以单独一份，避免把两种语义混进同一条说明。
+ */
+@Composable
+private fun SwitchOffConfirm(
+    show: Boolean,
+    titleRes: Int,
+    summaryRes: Int,
+    actionRes: Int,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    OverlayDialog(
+        show = show,
+        title = stringResource(titleRes),
+        summary = stringResource(summaryRes),
+        onDismissRequest = onDismiss,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            TextButton(
+                text = stringResource(R.string.cancel),
+                onClick = onDismiss,
+                modifier = Modifier.weight(1f),
+            )
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColorsPrimary(),
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(actionRes))
             }
         }
     }

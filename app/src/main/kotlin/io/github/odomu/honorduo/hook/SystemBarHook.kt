@@ -224,7 +224,8 @@ internal object SystemBarHook {
                 // 熄屏（含 AOD）期间宿主自己会把电池重挂到息屏容器：这里既不隐藏、
                 // 也不刷新行、更不重绘状态栏，否则 AOD 电量图标会再次被藏掉，
                 // 且每次电量更新都白白触发一轮全量重绘（后台功耗）。
-                if (ScreenStateTracker.isScreenOn) {
+                // 用户关掉「息屏时使用原生状态栏」后息屏也是本模块在画，照常走。
+                if (ScreenStateTracker.isScreenOn || !TrioConfig.appearance().aodNativeBar) {
                     if (StatusBarIconManager.isOwned(self.id, TrioConfig.appearance())) {
                         StatusBarIconManager.hide(self)
                     }

@@ -1862,6 +1862,7 @@ private fun LazyListScope.aboutTab(
     item { InfoCard(service = service) }
     item { SectionTitle(stringResource(R.string.group_source)) }
     item {
+        var showReward by remember { mutableStateOf(false) }
         Card {
             val context = LocalContext.current
             ArrowPreference(
@@ -1882,7 +1883,14 @@ private fun LazyListScope.aboutTab(
                 insideMargin = SettingsItemMargin,
                 onClick = { openLink(context, TRAE_INVITE_URL) },
             )
+            ArrowPreference(
+                title = stringResource(R.string.about_reward_title),
+                summary = stringResource(R.string.about_reward_summary),
+                insideMargin = SettingsItemMargin,
+                onClick = { showReward = true },
+            )
         }
+        RewardQrDialog(show = showReward, onDismiss = { showReward = false })
     }
     item { SectionTitle(stringResource(R.string.group_launcher_icon)) }
     item { LauncherIconCard() }
@@ -2469,6 +2477,43 @@ private fun ResetColorsDialog(
             ) {
                 Text(text = stringResource(R.string.color_reset_confirm))
             }
+        }
+    }
+}
+
+/**
+ * 赞赏码：点开入口后才显示的大图。
+ *
+ * 图片随包发在 `res/drawable-nodpi/reward_qr.png`（nodpi 不按屏幕密度缩放，
+ * 二维码按原始像素解码）。`if (!show) return` 保证关闭状态下不构造 [Image]，
+ * 也就不会解码这张 1229×1229 的位图。
+ */
+@Composable
+private fun RewardQrDialog(show: Boolean, onDismiss: () -> Unit) {
+    if (!show) return
+    OverlayDialog(
+        show = true,
+        title = stringResource(R.string.about_reward_dialog_title),
+        summary = stringResource(R.string.about_reward_dialog_summary),
+        onDismissRequest = onDismiss,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.reward_qr),
+                contentDescription = stringResource(R.string.about_reward_title),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(12.dp)),
+            )
+            TextButton(
+                text = stringResource(R.string.close),
+                onClick = onDismiss,
+                modifier = Modifier.padding(top = 8.dp),
+            )
         }
     }
 }

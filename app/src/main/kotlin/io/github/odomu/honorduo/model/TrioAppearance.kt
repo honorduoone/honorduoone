@@ -214,6 +214,15 @@ class TrioAppearance(c: TrioSettings) {
     @JvmField val panelNativeIcons: Boolean = c.panelNativeIcons
 
     /**
+     * AOD keeps the native status bar; see [Prefs.KEY_AOD_NATIVE_BAR].
+     *
+     * True (the default) hands the row back to the host while the screen is off.
+     * False keeps the glyph there for the whole AOD period, at the cost of the
+     * battery icon: the glyph draws no charge level in AOD.
+     */
+    @JvmField val aodNativeBar: Boolean = c.aodNativeBar
+
+    /**
      * The pull-down morph is live this frame: the switch is on, the glyph is in a
      * morphable arrangement (ring or capsule), and the panel native-icons handover
      * is off - the two are mutually exclusive, and the panel hand-over wins: with

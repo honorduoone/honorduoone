@@ -511,6 +511,9 @@ class SettingsRepository(context: Context) {
     /** Native icons while the panel is expanded - see [Prefs.KEY_PANEL_NATIVE_ICONS]. */
     fun setPanelNativeIcons(value: Boolean) = writeBoolean(Prefs.KEY_PANEL_NATIVE_ICONS, value)
 
+    /** Native status bar while the screen is off - see [Prefs.KEY_AOD_NATIVE_BAR]. */
+    fun setAodNativeBar(value: Boolean) = writeBoolean(Prefs.KEY_AOD_NATIVE_BAR, value)
+
     /**
      * 「展开面板显示原生图标」与下拉形变互斥：开启本项时在同一次事务里关闭形变，
      * 两个键一起落本地与 remote preferences。关闭只写自己。
@@ -668,6 +671,7 @@ class SettingsRepository(context: Context) {
             prefs.putBoolean(Prefs.KEY_TRIO_KEEP_ICONS, snapshot.trioKeepIcons)
             prefs.putBoolean(Prefs.KEY_CAPSULE_NO_SCALE, snapshot.capsuleNoScale)
             prefs.putBoolean(Prefs.KEY_PANEL_NATIVE_ICONS, snapshot.panelNativeIcons)
+            prefs.putBoolean(Prefs.KEY_AOD_NATIVE_BAR, snapshot.aodNativeBar)
             prefs.putBoolean(Prefs.KEY_MAGICOS10_INVERT, snapshot.magicos10Invert)
 
             prefs.putBoolean(Prefs.KEY_DEBUG_LOG, current.getBoolean(Prefs.KEY_DEBUG_LOG, Prefs.DEF_DEBUG_LOG))

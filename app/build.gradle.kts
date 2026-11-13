@@ -70,8 +70,10 @@ android {
         // 后才写入。1.1.12 的下拉卡顿修复（通知合并、最小间隔、查询回响静默、
         // 状态栏 sync 门控、日期行重算延迟与缓存）原样保留。
         // versionCode 必须高于此前已构建的 169（1.1.11），避免设备上覆盖安装失败。
-        versionCode = tagVersionCode ?: 170
-        versionName = tagVersionName ?: "1.1.12"
+        // 1.1.13（172）：息屏时使用原生状态栏开关、关于页赞赏码、HonorDuoBar 1.3.4
+        // 的两项绘制修复。正式发布号，覆盖此前本地构建的 1.1.15–1.1.17。
+        versionCode = tagVersionCode ?: 172
+        versionName = tagVersionName ?: "1.1.13"
 
         buildConfigField("String", "REPO_SLUG", "\"$repoSlug\"")
     }

@@ -296,6 +296,7 @@ private fun DrawingEditorCard(
             ContentControlRow(ContentControl.Enabled, settings, update)
             ContentControlRow(ContentControl.MergeIcons, settings, update)
             ContentControlRow(ContentControl.AntiBurnIn, settings, update)
+            ContentControlRow(ContentControl.AodNativeBar, settings, update)
             // 模块生效范围：与上游一致，放在功能开关最后一行的位置。
             ContentControlRow(ContentControl.EffectiveScope, settings, update)
             // 关闭全部已开启的功能项：动作行，点一下先确认，再逐项关闭；关完可 5 秒撤销。

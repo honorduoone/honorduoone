@@ -145,6 +145,11 @@
     <string name="trio_style_capsule">Capsule</string>
     <string name="anti_burn_in_title">Smart burn-in protection</string>
     <string name="anti_burn_in_summary">Periodic micro-shifts to protect OLED from burn-in</string>
+    <string name="aod_native_bar_title">Native status bar in AOD</string>
+    <string name="aod_native_bar_summary">On by default: AOD shows the native status bar, and the glyph returns the moment the screen wakes. Turn it off to keep this module\'s bar in AOD too — the switch-over flash is gone, but AOD then has no battery icon, because the glyph draws no charge level there.</string>
+    <string name="aod_native_bar_confirm_title">No battery icon in AOD</string>
+    <string name="aod_native_bar_confirm_summary">With this off, AOD also draws this module\'s bar, so nothing switches over when the screen wakes — but AOD then shows no battery icon, because the glyph draws no charge level there. Turn it off?</string>
+    <string name="aod_native_bar_confirm_action">Turn off</string>
     <string name="show_wifi_title">Wi-Fi arcs</string>
     <string name="show_traffic_title">Traffic arrows</string>
     <string name="show_bt_battery_title">Bluetooth battery</string>
@@ -400,6 +405,10 @@
     <string name="about_update_summary">Updates are infrequent - only handled on weekends. You can also take the source and let an AI change it yourself. Releases live on GitHub.</string>
     <string name="about_trae_title">TRAE invite link</string>
     <string name="about_trae_summary">I use TRAE, an AI coding tool that handles all kinds of tasks. Sign up through my share link and log in on desktop to get 3,000 credits as a new user. Only the share link counts.</string>
+    <string name="about_reward_title">Tips</string>
+    <string name="about_reward_summary">This app is completely free and every feature stays free. Tips are entirely voluntary and any amount is fine — they never unlock or restrict a feature.</string>
+    <string name="about_reward_dialog_title">Tips</string>
+    <string name="about_reward_dialog_summary">Scan with WeChat to leave a tip. Entirely voluntary; it does not affect any feature or imply any support commitment.</string>
 
     <string name="group_credits">Acknowledgements</string>
     <string name="credit_honorhook_summary">Reference for the liquid glass UI and status bar hook ideas</string>
@@ -423,6 +432,7 @@
     <string name="restart_done">System UI restarted</string>
     <string name="restart_failed">Restart failed — make sure root access was granted</string>
     <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
 
     <string name="ring_position_native">Hand back to system</string>
     <string name="ring_position_wifi">Wi-Fi arcs position</string>

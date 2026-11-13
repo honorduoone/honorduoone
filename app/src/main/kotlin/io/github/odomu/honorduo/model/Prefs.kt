@@ -1133,6 +1133,17 @@ object Prefs {
     const val DEF_PANEL_NATIVE_ICONS = false
 
     /**
+     * 息屏（AOD）时是否沿用本模块状态栏。
+     *
+     * 开（默认）：熄屏期间整行交还宿主，AOD 显示系统原生状态栏和原生电量图标；
+     * 亮屏瞬间再挂回三合一，切换只发生在点亮那一刻。
+     * 关：息屏也绘制本模块状态栏，亮屏时不再有切换感，代价是 AOD 下没有电池电量
+     * 图标——三合一字形在 AOD 里不绘制电量。
+     */
+    const val KEY_AOD_NATIVE_BAR = "aod_native_bar"
+    const val DEF_AOD_NATIVE_BAR = true
+
+    /**
      * MagicOS 10 反色兼容：部分 MagicOS 10 设备在状态栏对系统图标做反色处理，
      * 导致自绘字形颜色与原生图标相反。开启后对采样到的前景色做反色补偿，
      * 使字形与原生图标颜色一致。默认关。

@@ -161,6 +161,20 @@ object TrioRenderer {
     /** How far the running light is lifted towards white from the charged colour. */
     private const val FLOW_LIFT = 0.8f
 
+    /**
+     * 短于此角度的弧不画：ROUND 端点会把它画成一个凸起的墨点。
+     *
+     * 50% 时左右弧的理论长度相同，浮点误差会让进度在右弧多出不到 0.1° 的一段，
+     * 画出来就是胶囊/圆环右半多一个点。
+     */
+    private const val ARC_EPSILON = 0.5f
+
+    /**
+     * 电量极低时仍要画出来的一点墨：视觉弧长换算成扫角后会变成负数（补偿比电量还长），
+     * 这里保底 1°，避免 1–3% 时环上什么都没有。
+     */
+    private const val CAP_MIN_DEG = 1f
+
     /** Sparks travelling the ring, and their radius against the ring's stroke. */
     private const val RING_SPARK_COUNT = 3
     private const val RING_SPARK_SCALE = 0.55f
@@ -2197,6 +2211,7 @@ object TrioRenderer {
                 c, 0f, breathFraction(level, charging, a), gapStart, gapEnd, sweep, start,
                 openLeft, openRight,
                 leftFlankHalfDeg, rightFlankHalfDeg, topHalfDeg, bottomHalfDeg,
+                visual = true,
             )
         }
         if (!animated) {
@@ -2349,6 +2364,14 @@ object TrioRenderer {
         openLeft: Boolean = false, openRight: Boolean = false,
         leftFlankHalfDeg: Float = 0f, rightFlankHalfDeg: Float = 0f,
         topHalfDeg: Float = 0f, bottomHalfDeg: Float = 0f,
+        /**
+         * [toIn] 是按**视觉**弧长算的电量比（进度填充）。
+         *
+         * ROUND 端点的视觉弧长 = 扫角 + [CAP_DEG]（两端各多半个线宽），直接按扫角
+         * 线性映射会让进度比电量走得快（50% 时右弧多出一截、74% 看起来过半）。
+         * 轨道（0..1）与流光不按进度画，保持默认 false。
+         */
+        visual: Boolean = false,
     ) {
         val from = clamp01(fromIn)
         val to = clamp01(toIn)
@@ -2366,10 +2389,16 @@ object TrioRenderer {
                 return
             }
             val visibleFrom = from * drawn
-            val visibleTo = to * drawn
+            val visibleTo = if (visual) {
+                visualToDrawn(to, drawn * sweep) * drawn
+            } else {
+                to * drawn
+            }
             // First segment: visible progress [0, mouthStart] is path [0, mouthStart].
             val firstEnd = min(visibleTo, mouthStart)
-            if (firstEnd > visibleFrom) {
+            // 比 [ARC_EPSILON] 还短的残段画出来只是一个圆头墨点（50% 时右弧多出的那点），
+            // 与其画成凸起，不如不画。
+            if (firstEnd > visibleFrom && (firstEnd - visibleFrom) * sweep >= ARC_EPSILON) {
                 arcByProgress(
                     c, visibleFrom, firstEnd, TrioGeometry.B_CX, TrioGeometry.B_CY,
                     TrioGeometry.B_R, sweep, start,
@@ -2377,7 +2406,7 @@ object TrioRenderer {
             }
             // Second segment: visible progress (mouthStart, drawn] is path (mouthEnd, 1].
             val secondFrom = max(visibleFrom, mouthStart)
-            if (visibleTo > secondFrom) {
+            if (visibleTo > secondFrom && (visibleTo - secondFrom) * sweep >= ARC_EPSILON) {
                 arcByProgress(
                     c, mouthEnd + secondFrom - mouthStart, mouthEnd + visibleTo - mouthStart,
                     TrioGeometry.B_CX, TrioGeometry.B_CY, TrioGeometry.B_R, sweep, start,
@@ -2397,7 +2426,7 @@ object TrioRenderer {
         if (totalDrawn <= 0f) return
 
         val startDrawn = from * totalDrawn
-        val endDrawn = to * totalDrawn
+        val endDrawn = if (visual) visualToDrawn(to, totalDrawn) * totalDrawn else to * totalDrawn
         var curDist = 0f
 
         for (i in 0 until segCount) {
@@ -2408,7 +2437,7 @@ object TrioRenderer {
             val drawStart = max(startDrawn, curDist)
             val drawEnd = min(endDrawn, segEndDist)
 
-            if (drawEnd > drawStart) {
+            if (drawEnd - drawStart >= ARC_EPSILON) {
                 val segDrawStartDeg = segStartDeg + (drawStart - curDist)
                 val segDrawSweep = drawEnd - drawStart
                 arc(
@@ -2514,6 +2543,25 @@ object TrioRenderer {
         sweep: Float, start: Float,
     ) {
         arc(c, cx, cy, r, start + from * sweep, (to - from) * sweep)
+    }
+
+    /**
+     * 电量比（视觉）→ 实际扫角占比。
+     *
+     * ROUND 端点的视觉弧长比扫角多出 [capDeg]（两端各半个线宽沿弧投影），所以
+     * 「视觉进度 = 电量比」要求 sweep = ratio × (可见弧 + capDeg) − capDeg。
+     * 可见弧极短时结果为负，保底 [CAP_MIN_DEG]，让 1% 也有一个可辨认的点。
+     *
+     * @param f 电量比（0..1）
+     * @param visibleDeg 当前可画弧的总角度（已扣掉开口）
+     */
+    private fun visualToDrawn(f: Float, visibleDeg: Float): Float {
+        if (visibleDeg <= 0f) return f
+        val capDeg = Math.toDegrees((STROKE.strokeWidth / TrioGeometry.B_R).toDouble()).toFloat()
+        val visual = f * (visibleDeg + capDeg)
+        if (visual <= 0f) return 0f
+        val drawn = max(visual - capDeg, CAP_MIN_DEG)
+        return (drawn / visibleDeg).coerceIn(0f, 1f)
     }
 
     private fun arc(c: Canvas, cx: Float, cy: Float, r: Float, startDeg: Float, sweepDeg: Float) {
@@ -2853,7 +2901,10 @@ object TrioRenderer {
                     batteryRing(canvas, 0f, 1f, r!!.gapStart(), r.gapEnd(), r.sweep(), r.arcStart())
                     if (level > 0 && eff > 0f) {
                         STROKE.color = withAlpha(role, (255f * fade).toInt().coerceIn(0, 255))
-                        batteryRing(canvas, 0f, eff, r.gapStart(), r.gapEnd(), r.sweep(), r.arcStart())
+                        batteryRing(
+                            canvas, 0f, eff, r.gapStart(), r.gapEnd(), r.sweep(), r.arcStart(),
+                            visual = true,
+                        )
                     }
                 }
             }

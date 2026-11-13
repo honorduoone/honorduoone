@@ -136,7 +136,7 @@ internal object StatusBarIconManager {
         a.panelNativeIcons && TrioState.sPanelExpanded -> false
         id == wifiId -> a.glyph && a.ownsWifi()
         id == mobileId -> (a.glyph && (a.signalDots() || a.drawsAnySimRow())) || a.stackedOut() || a.dualSignal
-        id == batteryId -> a.glyph && sScreenOn
+        id == batteryId -> a.glyph && (sScreenOn || !a.aodNativeBar)
         id == clockId -> a.barClockHidden || (a.glyph && a.hidesStatusClock()) || BarClockManager.isClockAttached
         else -> false
     }
@@ -347,6 +347,12 @@ internal object StatusBarIconManager {
         sScreenOn = screenOn
         if (screenOn) return
         val a = TrioConfig.appearance()
+        // 用户关掉「息屏时使用原生状态栏」：息屏期间仍由本模块绘制，电池不交还宿主。
+        // 宿主在切 AOD 时可能把电池重新置为 VISIBLE，这里按新状态再刷一遍可见性。
+        if (!a.aodNativeBar) {
+            applyIconVisibility(a)
+            return
+        }
         synchronized(HIDDEN) {
             val it = HIDDEN.iterator()
             while (it.hasNext()) {

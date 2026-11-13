@@ -126,6 +126,9 @@ class TrioSettings {
     /** Show native icons while panel is expanded; see [Prefs.KEY_PANEL_NATIVE_ICONS]. */
     @JvmField
     var panelNativeIcons = Prefs.DEF_PANEL_NATIVE_ICONS
+    /** Use the native status bar while the screen is off; see [Prefs.KEY_AOD_NATIVE_BAR]. */
+    @JvmField
+    var aodNativeBar = Prefs.DEF_AOD_NATIVE_BAR
     /** MagicOS 10 invert-color compensation; see [Prefs.KEY_MAGICOS10_INVERT]. */
     @JvmField
     var magicos10Invert = Prefs.DEF_MAGICOS10_INVERT
@@ -500,6 +503,7 @@ class TrioSettings {
             trioKeepIcons = Prefs.DEF_TRIO_KEEP_ICONS
             capsuleNoScale = Prefs.DEF_CAPSULE_NO_SCALE
             panelNativeIcons = Prefs.DEF_PANEL_NATIVE_ICONS
+            aodNativeBar = Prefs.DEF_AOD_NATIVE_BAR
             magicos10Invert = Prefs.DEF_MAGICOS10_INVERT
             hideStatusClock = Prefs.DEF_HIDE_STATUS_CLOCK
             hideAlarmIcon = Prefs.DEF_HIDE_ALARM_ICON
@@ -720,6 +724,7 @@ class TrioSettings {
             s.trioKeepIcons = p.getBoolean(Prefs.KEY_TRIO_KEEP_ICONS, Prefs.DEF_TRIO_KEEP_ICONS)
             s.capsuleNoScale = p.getBoolean(Prefs.KEY_CAPSULE_NO_SCALE, Prefs.DEF_CAPSULE_NO_SCALE)
             s.panelNativeIcons = p.getBoolean(Prefs.KEY_PANEL_NATIVE_ICONS, Prefs.DEF_PANEL_NATIVE_ICONS)
+            s.aodNativeBar = p.getBoolean(Prefs.KEY_AOD_NATIVE_BAR, Prefs.DEF_AOD_NATIVE_BAR)
             s.magicos10Invert = p.getBoolean(Prefs.KEY_MAGICOS10_INVERT, Prefs.DEF_MAGICOS10_INVERT)
             s.hideStatusClock = p.getBoolean(Prefs.KEY_HIDE_STATUS_CLOCK, Prefs.DEF_HIDE_STATUS_CLOCK)
             s.hideAlarmIcon = p.getBoolean(Prefs.KEY_HIDE_ALARM_ICON, Prefs.DEF_HIDE_ALARM_ICON)
@@ -1064,6 +1069,7 @@ class TrioSettings {
             s.trioKeepIcons = bundle.getBoolean(Prefs.KEY_TRIO_KEEP_ICONS, Prefs.DEF_TRIO_KEEP_ICONS)
             s.capsuleNoScale = bundle.getBoolean(Prefs.KEY_CAPSULE_NO_SCALE, Prefs.DEF_CAPSULE_NO_SCALE)
             s.panelNativeIcons = bundle.getBoolean(Prefs.KEY_PANEL_NATIVE_ICONS, Prefs.DEF_PANEL_NATIVE_ICONS)
+            s.aodNativeBar = bundle.getBoolean(Prefs.KEY_AOD_NATIVE_BAR, Prefs.DEF_AOD_NATIVE_BAR)
             s.magicos10Invert = bundle.getBoolean(Prefs.KEY_MAGICOS10_INVERT, Prefs.DEF_MAGICOS10_INVERT)
             s.hideStatusClock = bundle.getBoolean(Prefs.KEY_HIDE_STATUS_CLOCK, Prefs.DEF_HIDE_STATUS_CLOCK)
             s.hideAlarmIcon = bundle.getBoolean(Prefs.KEY_HIDE_ALARM_ICON, Prefs.DEF_HIDE_ALARM_ICON)
@@ -1790,6 +1796,7 @@ class TrioSettings {
             Prefs.KEY_TRIO_KEEP_ICONS -> trioKeepIcons = src.trioKeepIcons
             Prefs.KEY_CAPSULE_NO_SCALE -> capsuleNoScale = src.capsuleNoScale
             Prefs.KEY_PANEL_NATIVE_ICONS -> panelNativeIcons = src.panelNativeIcons
+            Prefs.KEY_AOD_NATIVE_BAR -> aodNativeBar = src.aodNativeBar
             Prefs.KEY_MAGICOS10_INVERT -> magicos10Invert = src.magicos10Invert
             Prefs.KEY_HIDE_STATUS_CLOCK -> hideStatusClock = src.hideStatusClock
             Prefs.KEY_HIDE_ALARM_ICON -> hideAlarmIcon = src.hideAlarmIcon
@@ -1943,6 +1950,7 @@ class TrioSettings {
         putBoolean(Prefs.KEY_TRIO_KEEP_ICONS, trioKeepIcons)
         putBoolean(Prefs.KEY_CAPSULE_NO_SCALE, capsuleNoScale)
         putBoolean(Prefs.KEY_PANEL_NATIVE_ICONS, panelNativeIcons)
+        putBoolean(Prefs.KEY_AOD_NATIVE_BAR, aodNativeBar)
         putBoolean(Prefs.KEY_MAGICOS10_INVERT, magicos10Invert)
         putBoolean(Prefs.KEY_HIDE_STATUS_CLOCK, hideStatusClock)
         putBoolean(Prefs.KEY_HIDE_ALARM_ICON, hideAlarmIcon)
@@ -2086,6 +2094,7 @@ class TrioSettings {
             trioKeepIcons == other.trioKeepIcons &&
             capsuleNoScale == other.capsuleNoScale &&
             panelNativeIcons == other.panelNativeIcons &&
+            aodNativeBar == other.aodNativeBar &&
             magicos10Invert == other.magicos10Invert &&
             hideStatusClock == other.hideStatusClock &&
             hideAlarmIcon == other.hideAlarmIcon &&

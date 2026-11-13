@@ -196,11 +196,14 @@ internal object StatusBarRowManager {
             StatusBarIconManager.release(row.battery)
             return
         }
-        // 熄屏（含全屏 AOD）：整行交还宿主，一个字形都不挂。AOD 复用状态栏行时会
+        // 熄屏（含全屏 AOD）默认整行交还宿主，一个字形都不挂。AOD 复用状态栏行时会
         // 触发 onLayout → requestSync → syncRow，若照常规分支走，mountGlyph 会把
         // 刚在 onScreenStateChanged 里撤掉的字形重新挂回电池位，息屏就被胶囊占住、
         // 没有电池图标；而是否触发这次布局全看时序，表现出来就是「偶尔有电池」。
-        if (!ScreenStateTracker.isScreenOn) {
+        //
+        // 用户关掉「息屏时使用原生状态栏」后走常规分支：息屏期间也保持字形，
+        // 代价是 AOD 下没有电池电量图标（见 [Prefs.KEY_AOD_NATIVE_BAR]）。
+        if (!ScreenStateTracker.isScreenOn && a.aodNativeBar) {
             unmountGlyph(row)
             unmountOutViews(row)
             StatusBarIconManager.release(row.battery)
@@ -997,20 +1000,56 @@ internal object StatusBarRowManager {
         val neededH = (glyph as? io.github.odomu.honorduo.render.GlyphView)
             ?.let { if (it.desiredHeight > 0) it.desiredHeight else glyph.height }
             ?: glyph.height
+        // 四周各留 1dp：防烧屏是画布内 ±1dp 平移（GlyphView.onDrawInner），不留余量时
+        // 字形贴在某一侧边界上，位移到那一侧就会被上一层裁掉一个圆头。
+        // 胶囊比圆环宽，行容器常常刚好「装得下」墨迹，提前停手正是边界被切平的原因。
+        val slack = (2f * glyph.resources.displayMetrics.density).toInt().coerceAtLeast(2)
+        val needW = neededW + slack
+        val needH = neededH + slack
+        // 判定用窗口坐标，而不是 View 自己的宽高：字形按设定尺寸绘制、可能比 View 大，
+        // 只看 View 尺寸会把「装得下 View」误当成「装得下墨迹」。未排版时退化为按尺寸判断。
+        val laidOut = glyph.width > 0 && glyph.height > 0
+        val ink = IntArray(2)
+        val host = IntArray(2)
+        if (laidOut) glyph.getLocationInWindow(ink)
         var p: View? = glyph.parent as? View
         var depth = 0
         while (p != null && depth++ < 8) {
             if (p is ViewGroup) {
                 if (p.clipChildren) p.clipChildren = false
                 if (p.clipToPadding) p.clipToPadding = false
-                if (p.width > 0 && p.height > 0 && p.width >= neededW && p.height >= neededH) return
+                val fits = if (laidOut) {
+                    p.width > 0 && p.height > 0 && run {
+                        p.getLocationInWindow(host)
+                        // 墨迹从 View 左上角开始（GlyphView 按 drawW×drawH 绘制），
+                        // 不是居中溢出，所以左上角就是墨迹原点。
+                        ink[0] >= host[0] && ink[0] + needW <= host[0] + p.width &&
+                            ink[1] >= host[1] && ink[1] + needH <= host[1] + p.height
+                    }
+                } else {
+                    p.width > 0 && p.height > 0 && p.width >= needW && p.height >= needH
+                }
+                // 这一层连位移余量一起装得下，就不用再往上放开了
+                if (fits) return
             }
             p = p.parent as? View
         }
     }
 
     fun onScreenStateChanged(screenOn: Boolean) {
+        val a = TrioConfig.appearance()
         if (!screenOn) {
+            // 「息屏时使用原生状态栏」关掉时保持字形常驻：这里逐行同步一次，而不是
+            // 等 AOD 复用状态栏行时的布局来补——那次布局是否发生看时序，补不及就是
+            // 息屏偶尔露出原生电池、偶尔没有。
+            if (!a.aodNativeBar) {
+                for (row in snapshot()) {
+                    syncRow(row, false)
+                    row.row.requestLayout()
+                    row.row.invalidate()
+                }
+                return
+            }
             for (row in snapshot()) {
                 row.row.removeCallbacks(row.burnInTask)
                 // 息屏（含全屏 AOD）把整行交还宿主：撤掉三合一视图和外置组件，
@@ -1022,7 +1061,6 @@ internal object StatusBarRowManager {
                 row.battery.visibility = View.VISIBLE
             }
         } else {
-            val a = TrioConfig.appearance()
             // 亮屏重新挂回三合一视图；一次强制同步会把撤掉的部件补回来。
             syncAll(a, force = true)
             for (row in snapshot()) {
