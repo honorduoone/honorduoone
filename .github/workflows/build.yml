@@ -8,12 +8,17 @@
 # in place over an existing HonorDuo.
 name: build
 
-# Only the fork branch is packaged. `main` mirrors upstream, whose sources are
-# not this project's and must not consume runner time; a v* tag still builds,
-# because that is how a release is produced from a fork commit.
+# Only tags are packaged. `main` mirrors upstream, whose sources are not this
+# project's and must not consume runner time; a tag still builds, because that is
+# how a release is produced from a fork commit.
 on:
   push:
-    tags: ['v*']
+    tags:
+      # `v*`：老的自定义版本标签（如 v1.1.12）。
+      # `[0-9]*-*`：官方模块仓库格式（如 172-1.1.13），版本号与 versionCode 都由标签
+      # 本身给出，见下方 Resolve version。
+      - 'v*'
+      - '[0-9]*-*'
   workflow_dispatch:
     inputs:
       versionName:
