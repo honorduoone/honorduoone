@@ -1905,6 +1905,8 @@ private fun LazyListScope.aboutTab(
             )
         }
     }
+    item { SectionTitle(stringResource(R.string.group_conflict)) }
+    item { ConflictWarningCard(settings = settings, update = update) }
     item { SectionTitle(stringResource(R.string.group_debug)) }
     item {
         Card {
@@ -2271,6 +2273,70 @@ private fun LauncherIconCard() {
             summary = stringResource(R.string.about_hide_icon_summary),
             insideMargin = SettingsItemMargin,
         )
+    }
+}
+
+/**
+ * 已知会与本模块抢同一批状态栏槽位的模块包名。
+ *
+ * 只在「关于」页做提示用：设置 App 没有 root，读不到 LSPosed 里谁被勾选，
+ * 因此这里检测的是「已安装」而不是「已启用」，文案也按「已安装」措辞。
+ */
+private val CONFLICT_PACKAGES = listOf(
+    "io.github.honorduo", // 上游 HonorDuo
+    "io.github.yixing233.hyperduo", // 上游 HyperDuo
+    "io.github.honorduobar", // HonorDuoBar
+    "com.honor.duo", // 早期 HonorDuo 包名
+)
+
+/**
+ * 冲突提示：开关打开后，在关于页列出已安装的同类状态栏模块。
+ *
+ * 同装多个模块时它们会各自 Hook 同一批 SystemUI 视图，最后一次写入的赢，
+ * 表现为图标闪烁或一半样式生效。设置进程只能看到包是否已安装，看不到
+ * LSPosed 的作用域勾选，所以这里只报「已安装」，并提示去核对作用域。
+ */
+@Composable
+private fun ConflictWarningCard(
+    settings: TrioSettings,
+    update: ((SettingsRepository) -> Unit) -> Unit,
+) {
+    val context = LocalContext.current
+    val installed = remember(context, settings.conflictWarning) {
+        if (!settings.conflictWarning) {
+            emptyList()
+        } else {
+            CONFLICT_PACKAGES.filter { pkg ->
+                pkg != context.packageName && runCatching {
+                    context.packageManager.getPackageInfo(pkg, 0)
+                }.isSuccess
+            }
+        }
+    }
+    Card {
+        SwitchPreference(
+            checked = settings.conflictWarning,
+            onCheckedChange = { value -> update { it.setConflictWarning(value) } },
+            title = stringResource(R.string.conflict_title),
+            summary = stringResource(R.string.conflict_summary),
+            insideMargin = SettingsItemMargin,
+        )
+        if (settings.conflictWarning) {
+            Text(
+                text = if (installed.isEmpty()) {
+                    stringResource(R.string.conflict_none)
+                } else {
+                    stringResource(R.string.conflict_found, installed.joinToString("、"))
+                },
+                style = MiuixTheme.textStyles.body2,
+                color = if (installed.isEmpty()) {
+                    MiuixTheme.colorScheme.onSurfaceVariantSummary
+                } else {
+                    MiuixTheme.colorScheme.error
+                },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
     }
 }
 

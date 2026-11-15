@@ -234,6 +234,10 @@ internal object SystemBarHook {
                         StatusBarRowManager.syncRow(row, false)
                     }
                     TrioHooks.invalidateHosts()
+                } else {
+                    // 熄屏交接后的充电/电量变化：这颗电池此刻归宿主，任何一方把它
+                    // 藏起来都没有下一帧来接，所以顺手确认它是可见的。
+                    StatusBarIconManager.release(self)
                 }
             }
             result

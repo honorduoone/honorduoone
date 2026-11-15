@@ -253,6 +253,33 @@ class SettingsRepository(context: Context) {
     fun setCapsuleRightDy(value: Int) = writeInt(Prefs.KEY_CAPSULE_RIGHT_DY, value)
     fun setRingSpacingX(value: Int) = writeInt(Prefs.KEY_RING_SPACING_X, value)
     fun setRingSpacingY(value: Int) = writeInt(Prefs.KEY_RING_SPACING_Y, value)
+
+    /** 信号点间距百分比 - 见 [Prefs.KEY_SIGNAL_PITCH]。 */
+    fun setSignalPitch(value: Int) = writeInt(Prefs.KEY_SIGNAL_PITCH, value)
+
+    /** 信号条粗细百分比 - 见 [Prefs.KEY_SIGNAL_BAR_WIDTH]。 */
+    fun setSignalBarWidth(value: Int) = writeInt(Prefs.KEY_SIGNAL_BAR_WIDTH, value)
+
+    fun setRingTextFitOpening(value: Boolean) =
+        writeBoolean(Prefs.KEY_RING_TEXT_FIT_OPENING, value)
+
+    fun setRingCentreOnCircle(value: Boolean) =
+        writeBoolean(Prefs.KEY_RING_CENTRE_ON_CIRCLE, value)
+
+    fun setTypeShort5A(value: Boolean) = writeBoolean(Prefs.KEY_TYPE_SHORT_5A, value)
+
+    fun setRingStackFlat(value: Boolean) = writeBoolean(Prefs.KEY_RING_STACK_FLAT, value)
+
+    fun setClockInkCentre(value: Boolean) = writeBoolean(Prefs.KEY_CLOCK_INK_CENTRE, value)
+
+    fun setOpeningTextInset(value: Boolean) = writeBoolean(Prefs.KEY_OPENING_TEXT_INSET, value)
+
+    fun setRingRowPitchFollow(value: Boolean) =
+        writeBoolean(Prefs.KEY_RING_ROW_PITCH_FOLLOW, value)
+
+    fun setShowCollisionBox(value: Boolean) = writeBoolean(Prefs.KEY_SHOW_COLLISION_BOX, value)
+
+    fun setConflictWarning(value: Boolean) = writeBoolean(Prefs.KEY_CONFLICT_WARNING, value)
     fun setReplaceWifiIcon(value: Boolean) = writeBoolean(Prefs.KEY_REPLACE_WIFI_ICON, value)
     fun setReplaceStatusIcon(value: Boolean) = writeBoolean(Prefs.KEY_REPLACE_STATUS_ICON, value)
     fun setHideStatusClock(value: Boolean) = writeBoolean(Prefs.KEY_HIDE_STATUS_CLOCK, value)

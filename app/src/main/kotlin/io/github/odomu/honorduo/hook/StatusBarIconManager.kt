@@ -136,7 +136,10 @@ internal object StatusBarIconManager {
         a.panelNativeIcons && TrioState.sPanelExpanded -> false
         id == wifiId -> a.glyph && a.ownsWifi()
         id == mobileId -> (a.glyph && (a.signalDots() || a.drawsAnySimRow())) || a.stackedOut() || a.dualSignal
-        id == batteryId -> a.glyph && (sScreenOn || !a.aodNativeBar)
+        // 电池要两个「亮屏」都成立才收回：一个来自广播（同步翻转），一个来自熄屏
+        // 处理（主线程下一轮）。任一为假就不藏——宁可让宿主的电池多亮一帧，也不能
+        // 在 AOD 里藏掉一颗没人接回来的电池。
+        id == batteryId -> a.glyph && ((sScreenOn && ScreenStateTracker.isScreenOn) || !a.aodNativeBar)
         id == clockId -> a.barClockHidden || (a.glyph && a.hidesStatusClock()) || BarClockManager.isClockAttached
         else -> false
     }
@@ -321,6 +324,10 @@ internal object StatusBarIconManager {
     }
 
     fun hide(view: View) {
+        // 藏之前先登记：交接只扫「登记过的」和「受管容器里的」两处，不登记的 View
+        // 一旦被藏就再没有代码会想起它。宿主在 AOD 切换时新膨胀出来的电池实例就
+        // 属于这一类——那正是息屏偶尔没有电量图标的来源。
+        rememberHidden(view)
         if (view.visibility != View.GONE) {
             view.visibility = View.GONE
         }
@@ -353,20 +360,38 @@ internal object StatusBarIconManager {
             applyIconVisibility(a)
             return
         }
+        handBackBatteries(a)
+    }
+
+    /**
+     * 熄屏交接：把电池还给宿主。
+     *
+     * 两处都扫。登记表里的是本模块藏过的；受管容器里按 id 找的是宿主机交接时可能
+     * 重新膨胀出来的那颗电池——它没被登记过，只扫登记表就会漏掉，息屏于是没有
+     * 电量图标。按 id 找一遍之后，结果就不再取决于「谁先被藏、藏时有没有登记」。
+     */
+    private fun handBackBatteries(a: TrioAppearance) {
+        if (!idsResolved || batteryId == 0) return
+        for (row in StatusBarRowManager.snapshot()) {
+            releaseBatteryIn(row.container, a)
+        }
+        contentsViewGroup?.let { releaseBatteryIn(it, a) }
         synchronized(HIDDEN) {
             val it = HIDDEN.iterator()
             while (it.hasNext()) {
                 val view = it.next().get()
-                if (view == null) {
-                    it.remove()
-                    continue
-                }
-                if (view.id == batteryId) {
-                    release(view, a)
-                    it.remove()
-                }
+                if (view == null || view.id == batteryId) it.remove()
             }
         }
+    }
+
+    private fun releaseBatteryIn(view: View, a: TrioAppearance) {
+        if (view is ViewGroup) {
+            for (i in 0 until view.childCount) {
+                releaseBatteryIn(view.getChildAt(i), a)
+            }
+        }
+        if (view.id == batteryId) release(view, a)
     }
 
     /**

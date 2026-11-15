@@ -646,6 +646,33 @@ internal fun geometrySliders(): List<SliderSpec> {
             enabled = { it.ring },
             suffix = "px",
         ),
+        // 信号点间距与条粗细：环外列距、环内点距与柱宽共用两个百分比。
+        SliderSpec(
+            group = GeometryGroup.Layout,
+            part = null,
+            min = Prefs.MIN_SIGNAL_PITCH,
+            max = Prefs.MAX_SIGNAL_PITCH,
+            read = { it.signalPitch },
+            editorOwner = TrioSettingsPart.Appearance,
+            write = { r, v -> r.setSignalPitch(v) },
+            titleRes = { R.string.signal_pitch_title },
+            summaryRes = { R.string.signal_pitch_summary },
+            enabled = { true },
+            suffix = "%",
+        ),
+        SliderSpec(
+            group = GeometryGroup.Layout,
+            part = null,
+            min = Prefs.MIN_SIGNAL_BAR_WIDTH,
+            max = Prefs.MAX_SIGNAL_BAR_WIDTH,
+            read = { it.signalBarWidth },
+            editorOwner = TrioSettingsPart.Appearance,
+            write = { r, v -> r.setSignalBarWidth(v) },
+            titleRes = { R.string.signal_bar_width_title },
+            summaryRes = { R.string.signal_bar_width_summary },
+            enabled = { true },
+            suffix = "%",
+        ),
         // The morph rows: they size the expanded row, so they only make sense with the
         // morph on for a slotted arrangement.
         SliderSpec(

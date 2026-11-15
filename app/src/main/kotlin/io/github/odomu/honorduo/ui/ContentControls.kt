@@ -236,6 +236,24 @@ internal enum class ContentControl(val owner: TrioSettingsPart) {
      * （见 [contentControlsFor] 的排除项），弹层里没有这一行。
      */
     EffectiveScope(TrioSettingsPart.Appearance),
+
+    /* ---- 精细调节：全部默认关闭，默认视觉与改动前一致 ---- */
+    /** 环开口按实际文字墨迹测量。 */
+    RingFitOpening(TrioSettingsPart.Appearance),
+    /** 圆环中部以圆心为基准。 */
+    RingCentreCircle(TrioSettingsPart.Appearance),
+    /** 环内信号点平铺而非沿弧。 */
+    RingStackFlat(TrioSettingsPart.Mobile),
+    /** 环内两排行距跟随点径与间距。 */
+    RingRowPitchFollow(TrioSettingsPart.Mobile),
+    /** 开口里的读数两端按体部内边距内缩。 */
+    OpeningTextInset(TrioSettingsPart.Appearance),
+    /** 5GA 显示为 5A。 */
+    TypeShort5A(TrioSettingsPart.Type),
+    /** 时钟按逐字墨迹居中。 */
+    ClockInkCentre(TrioSettingsPart.Clock),
+    /** 绘制碰撞盒（调试）。 */
+    ShowCollisionBox(TrioSettingsPart.Appearance),
 }
 
 internal fun contentControlsFor(part: TrioSettingsPart): List<ContentControl> =
@@ -313,6 +331,14 @@ internal fun ContentControl.searchLabel(): ContentSearchLabel? = when (this) {
     ContentControl.ClockWeather -> ContentSearchLabel(R.string.clock_weather_title, R.string.clock_weather_summary)
     ContentControl.ClockWeatherStyle -> ContentSearchLabel(R.string.clock_weather_style_title)
     ContentControl.ClockStyle -> ContentSearchLabel(R.string.clock_layout_style_title)
+    ContentControl.RingFitOpening -> ContentSearchLabel(R.string.ring_fit_opening_title, R.string.ring_fit_opening_summary)
+    ContentControl.RingCentreCircle -> ContentSearchLabel(R.string.ring_centre_circle_title, R.string.ring_centre_circle_summary)
+    ContentControl.RingStackFlat -> ContentSearchLabel(R.string.ring_stack_flat_title, R.string.ring_stack_flat_summary)
+    ContentControl.RingRowPitchFollow -> ContentSearchLabel(R.string.ring_row_pitch_title, R.string.ring_row_pitch_summary)
+    ContentControl.OpeningTextInset -> ContentSearchLabel(R.string.opening_text_inset_title, R.string.opening_text_inset_summary)
+    ContentControl.TypeShort5A -> ContentSearchLabel(R.string.type_short_5a_title, R.string.type_short_5a_summary)
+    ContentControl.ClockInkCentre -> ContentSearchLabel(R.string.clock_ink_centre_title, R.string.clock_ink_centre_summary)
+    ContentControl.ShowCollisionBox -> ContentSearchLabel(R.string.show_collision_box_title, R.string.show_collision_box_summary)
     ContentControl.HideAlarmIcon -> ContentSearchLabel(R.string.hide_alarm_icon_title, R.string.hide_alarm_icon_summary)
     ContentControl.HideBluetoothIcon -> ContentSearchLabel(R.string.hide_bluetooth_icon_title, R.string.hide_bluetooth_icon_summary)
     ContentControl.HidePrivacyChip -> ContentSearchLabel(R.string.hide_privacy_chip_title, R.string.hide_privacy_chip_summary)
@@ -545,6 +571,54 @@ private fun ContentControlRowBody(
             dependencies = listOf(!a.ring to R.string.trio_style_title),
         ) { value -> update { it.setChargingShowsValue(value) } }
         ContentControl.Bolt -> ContentToggle(a.boltWanted, R.string.show_bolt_title, null, emptyList()) { value -> update { it.setShowBolt(value) } }
+        ContentControl.RingFitOpening -> ContentToggle(
+            checked = settings.ringTextFitOpening,
+            title = R.string.ring_fit_opening_title,
+            summaryRes = R.string.ring_fit_opening_summary,
+            dependencies = listOf(!a.ring to R.string.trio_style_title),
+        ) { value -> update { it.setRingTextFitOpening(value) } }
+        ContentControl.RingCentreCircle -> ContentToggle(
+            checked = settings.ringCentreOnCircle,
+            title = R.string.ring_centre_circle_title,
+            summaryRes = R.string.ring_centre_circle_summary,
+            dependencies = listOf(!a.ring to R.string.trio_style_title),
+        ) { value -> update { it.setRingCentreOnCircle(value) } }
+        ContentControl.RingStackFlat -> ContentToggle(
+            checked = settings.ringStackFlat,
+            title = R.string.ring_stack_flat_title,
+            summaryRes = R.string.ring_stack_flat_summary,
+            dependencies = listOf(!a.ring to R.string.trio_style_title),
+        ) { value -> update { it.setRingStackFlat(value) } }
+        ContentControl.RingRowPitchFollow -> ContentToggle(
+            checked = settings.ringRowPitchFollow,
+            title = R.string.ring_row_pitch_title,
+            summaryRes = R.string.ring_row_pitch_summary,
+            dependencies = listOf(!a.ring to R.string.trio_style_title),
+        ) { value -> update { it.setRingRowPitchFollow(value) } }
+        ContentControl.OpeningTextInset -> ContentToggle(
+            checked = settings.openingTextInset,
+            title = R.string.opening_text_inset_title,
+            summaryRes = R.string.opening_text_inset_summary,
+            dependencies = listOf(!a.ring to R.string.trio_style_title),
+        ) { value -> update { it.setOpeningTextInset(value) } }
+        ContentControl.TypeShort5A -> ContentToggle(
+            checked = settings.typeShort5A,
+            title = R.string.type_short_5a_title,
+            summaryRes = R.string.type_short_5a_summary,
+            dependencies = emptyList(),
+        ) { value -> update { it.setTypeShort5A(value) } }
+        ContentControl.ClockInkCentre -> ContentToggle(
+            checked = settings.clockInkCentre,
+            title = R.string.clock_ink_centre_title,
+            summaryRes = R.string.clock_ink_centre_summary,
+            dependencies = emptyList(),
+        ) { value -> update { it.setClockInkCentre(value) } }
+        ContentControl.ShowCollisionBox -> ContentToggle(
+            checked = settings.showCollisionBox,
+            title = R.string.show_collision_box_title,
+            summaryRes = R.string.show_collision_box_summary,
+            dependencies = emptyList(),
+        ) { value -> update { it.setShowCollisionBox(value) } }
         ContentControl.BoltAnimEnabled -> ContentToggle(
             checked = settings.boltAnim != Prefs.BOLT_ANIM_OFF,
             title = R.string.bolt_anim_enabled_title,

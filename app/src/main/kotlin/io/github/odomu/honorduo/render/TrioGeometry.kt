@@ -478,10 +478,10 @@ object TrioGeometry {
      */
     const val RECT_BOLT_DX = 0.55f
     const val RECT_BOLT_DY = 0.24f
-    const val INK_X = B_CX - 59.5f
-    const val INK_Y = B_CY - 59.5f
-    const val INK_W = 119f
-    const val INK_H = 119f
+    const val INK_X = B_CX - 61.5f
+    const val INK_Y = B_CY - 61.5f
+    const val INK_W = 123f
+    const val INK_H = 123f
 
     /**
      * The same box for the rectangular arrangement.
@@ -1140,7 +1140,7 @@ object TrioGeometry {
      * only at the centre line did.
      */
     @JvmStatic
-    fun zoneTextRoomW(z: Int, ringStroke: Int, inkH: Float): Float {
+    fun zoneTextRoomW(z: Int, ringStroke: Int, inkH: Float, centreOnCircle: Boolean = false): Float {
         if (z != 1) {
             // The end thirds sit in the ring's own openings, where there is no arc across
             // the slot at all - the ink there is bounded by the arc's END CAPS, not by a
@@ -1156,7 +1156,7 @@ object TrioGeometry {
             // caps, which is fixed by the opening's width, not by the text.
             return maxOf(0f, openingChord(z, ringStroke.toFloat()))
         }
-        val centre = zoneTextCy(z, ringStroke)
+        val centre = zoneTextCy(z, ringStroke, centreOnCircle)
         val half = maxOf(0f, inkH) * 0.5f
         // The middle third is inside the ring, so its budget really is a chord - and one
         // that narrows as the line grows, which is why the caller iterates.
@@ -1200,8 +1200,9 @@ object TrioGeometry {
      * same point so the two always agree.
      */
     @JvmStatic
-    fun zoneTextCy(z: Int, ringStroke: Int): Float {
-        return ZONE_CY[z]
+    fun zoneTextCy(z: Int, ringStroke: Int, centreOnCircle: Boolean = false): Float {
+        // 开关打开时，中部槽心取圆环自身圆心；默认仍是槽心（比圆心低 2.5 单位）。
+        return if (centreOnCircle && z == 1) B_CY else ZONE_CY[z]
     }
 
     @JvmField
@@ -1330,10 +1331,16 @@ object TrioGeometry {
     //     row appeared, because the arc has an opening at the bottom and its ink sits above
     //     the ring's centre.
     //
-    // Half-extent 59.5 is the reach of the outermost ink from the ring's centre: the cap of
-    // the thickest stroke above (61.487 - 1.99 = 59.50) and the bottom bead row below
-    // (120.99 - 61.487 = 59.50). Those two are equal, which is what makes the box symmetric
-    // and the ring exactly centred.
+    // Half-extent 61.5 is the reach of the outermost ink from the ring's centre: the arc's
+    // apex at B_R plus half the thickest stroke the slider allows (51.5 + 20 / 2 = 61.5),
+    // which is also where the outermost bead row ends, since a bead's radius is half the
+    // stroke and it rides the arc. The box is sized for that limit rather than the default
+    // look, so at the default stroke the ink stops short of the edge and that margin is
+    // what keeps the top of the slider from being clipped.
+    //
+    // Because of that, MAX_RING_STROKE and this box move together: the previous 59.5 was
+    // the 16-unit stroke, and leaving it behind when the limit went to 20 is what made
+    // [checkInkBox] throw at class load on every process that drew the ring.
     //
     // The bead rows ARE included, at the thickest stroke the slider allows. Excluding them
     // was tried and is wrong: a placed bottom row reaches y 118 while a ring-only box stopped

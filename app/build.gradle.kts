@@ -72,8 +72,13 @@ android {
         // versionCode 必须高于此前已构建的 169（1.1.11），避免设备上覆盖安装失败。
         // 1.1.13（172）：息屏时使用原生状态栏开关、关于页赞赏码、HonorDuoBar 1.3.4
         // 的两项绘制修复。正式发布号，覆盖此前本地构建的 1.1.15–1.1.17。
-        versionCode = tagVersionCode ?: 172
-        versionName = tagVersionName ?: "1.1.13"
+        // 1.1.14（174）：11 项绘制精细调节与调试开关，全部默认关闭/100%，
+        // 默认视觉与 1.1.13 完全一致；整体尺寸上限 130%、环线粗细上限 20。
+        // 173 是内部交付号，未对外发布；对外统一按 1.1.14 发布，versionCode 取 174。
+        // 174 相对 173：修复 AOD 里电池图标时有时无；修复点桌面图标打开设置即退回桌面
+        // （173 把圆环线宽上限提到 20 时，墨迹盒仍按 16 的线宽写死，几何自检在类加载期抛错）。
+        versionCode = tagVersionCode ?: 174
+        versionName = tagVersionName ?: "1.1.14"
 
         buildConfigField("String", "REPO_SLUG", "\"$repoSlug\"")
     }

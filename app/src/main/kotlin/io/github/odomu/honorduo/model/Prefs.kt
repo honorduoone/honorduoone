@@ -58,9 +58,9 @@ object Prefs {
      * Overall size of the trio glyph, as a percentage of the size the host box
      * already implies.
      *
-     * Shrink-only - the range stops at 100 - because the box the row hands over
-     * is the limit: the glyph is fitted inside it, and asking for more cannot make
-     * the box grow.
+     * The ceiling is now 130: above 100 the glyph is drawn larger than the row's
+     * nominal box and settled by the host's own layout, so it can crowd its
+     * neighbours. The lower bound is still shrink-only territory.
      */
     const val KEY_GLYPH_SCALE = "glyph_scale_pct"
 
@@ -247,6 +247,45 @@ object Prefs {
 
     /** Which three-in-one layout is drawn: one of the `STYLE_*` constants. */
     const val KEY_TRIO_STYLE = "trio_style"
+
+    /*
+     * ---- 环/信号的精细调节与调试开关 ----
+     * 十一项全部默认关闭（或 100%），即默认视觉与改动前完全一致。
+     * 每一项只影响自己那一处绘制，互不耦合。
+     */
+
+    /** 信号点间距百分比：环外列距 + 环内点距，60..200，100 = 现状。 */
+    const val KEY_SIGNAL_PITCH = "signal_pitch_pct"
+
+    /** 信号条粗细百分比：环外柱/点的宽度，40..200，100 = 现状。 */
+    const val KEY_SIGNAL_BAR_WIDTH = "signal_bar_width_pct"
+
+    /** 环开口宽度按实际文字墨迹测量；关 = 固定 96° 开口。 */
+    const val KEY_RING_TEXT_FIT_OPENING = "ring_text_fit_opening"
+
+    /** 圆环中部的槽心取圆心；关 = 沿用 2.5 单位偏低的槽心。 */
+    const val KEY_RING_CENTRE_ON_CIRCLE = "ring_centre_on_circle"
+
+    /** 网络类型「5GA」显示为「5A」；关 = 保持「5GA」。 */
+    const val KEY_TYPE_SHORT_5A = "type_short_5a"
+
+    /** 环内信号点平铺而非沿弧；关 = 沿弧。 */
+    const val KEY_RING_STACK_FLAT = "ring_stack_flat"
+
+    /** 时钟按逐字墨迹居中；关 = 沿用字体度量居中。 */
+    const val KEY_CLOCK_INK_CENTRE = "clock_ink_centre"
+
+    /** 开口里的读数两端按体部内边距内缩；关 = 用满开口。 */
+    const val KEY_OPENING_TEXT_INSET = "opening_text_inset"
+
+    /** 环内两排信号点行距跟随点径与间距参数；关 = 沿用写死的 3.8。 */
+    const val KEY_RING_ROW_PITCH_FOLLOW = "ring_row_pitch_follow"
+
+    /** 绘制组件碰撞盒（调试）；关 = 不画。 */
+    const val KEY_SHOW_COLLISION_BOX = "show_collision_box"
+
+    /** 关于页冲突提示：检测到其他状态栏类模块时告警；关 = 不提示。 */
+    const val KEY_CONFLICT_WARNING = "conflict_warning"
 
     /**
      * The ring layout: an ordered list of pieces per zone, as one string.
@@ -1472,7 +1511,7 @@ object Prefs {
 
     // Bounds.
     const val MIN_RING_STROKE = 4
-    const val MAX_RING_STROKE = 16
+    const val MAX_RING_STROKE = 20
     const val MIN_ARC_STROKE = 3
     const val MAX_ARC_STROKE = 16
     const val MIN_VALUE_SIZE = 16
@@ -1587,9 +1626,29 @@ object Prefs {
     const val MIN_TRACK_ALPHA = 0
     const val MAX_TRACK_ALPHA = 255
 
-    /** 60..100: the ceiling is the box the row hands over. */
+    /** 60..130: 穿过 100 号字只是把字形画得更大，宿主仍按比例排布。 */
     const val MIN_GLYPH_SCALE = 60
-    const val MAX_GLYPH_SCALE = 100
+    const val MAX_GLYPH_SCALE = 130
+
+    /** 信号点间距 60..200，100 = 现状。 */
+    const val MIN_SIGNAL_PITCH = 60
+    const val MAX_SIGNAL_PITCH = 200
+    const val DEF_SIGNAL_PITCH = 100
+
+    /** 信号条粗细 40..200，100 = 现状。 */
+    const val MIN_SIGNAL_BAR_WIDTH = 40
+    const val MAX_SIGNAL_BAR_WIDTH = 200
+    const val DEF_SIGNAL_BAR_WIDTH = 100
+
+    const val DEF_RING_TEXT_FIT_OPENING = false
+    const val DEF_RING_CENTRE_ON_CIRCLE = false
+    const val DEF_TYPE_SHORT_5A = false
+    const val DEF_RING_STACK_FLAT = false
+    const val DEF_CLOCK_INK_CENTRE = false
+    const val DEF_OPENING_TEXT_INSET = false
+    const val DEF_RING_ROW_PITCH_FOLLOW = false
+    const val DEF_SHOW_COLLISION_BOX = false
+    const val DEF_CONFLICT_WARNING = false
 
     /** Wider than the glyph's span and allowed past 100: this multiplies a text size. */
     const val MIN_PERF_SCALE = 60

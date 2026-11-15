@@ -58,6 +58,9 @@ object TrioRenderer {
     private val STROKE = Paint(Paint.ANTI_ALIAS_FLAG)
     private val FILL = Paint(Paint.ANTI_ALIAS_FLAG)
     private val TEXT = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    /** 碰撞盒调试颜色（洋红），只在开关打开时出现。 */
+    private const val COLLISION_BOX_COLOR = 0xFFFF00FF.toInt()
     private val BOLT = buildBolt()
     private val WIFI_PATHS = TrioGeometry.buildWifiPaths()
     private val WIFI_DOT = WIFI_PATHS[0]
@@ -423,7 +426,11 @@ object TrioRenderer {
         // Suppressing the STRING rather than a per-arrangement flag keeps this in one
         // place: every arrangement already treats "no type" as "draw none of it", so the
         // ring, the rectangle and the capsule all obey without knowing this setting.
-        val shownType = if (appearance.typeHideOnWifi && wifiLevel >= 1) null else mobileType
+        val shownType = if (appearance.typeHideOnWifi && wifiLevel >= 1) {
+            null
+        } else {
+            appearance.displayType(mobileType)
+        }
         animSpeed = appearance.boltSpeedFactor()
         boltMoving = appearance.animatesOutline(charging, level)
         // The transform is asked for rather than worked out here, because the settings screen's tappable zones have to land on the very pixels this drawing lands on.
@@ -494,6 +501,21 @@ object TrioRenderer {
             }
 
         }
+        // 调试：把模块在宿主里实际占用的矩形画出来。让位判定比较的是这个视图的
+        // 屏幕边界，所以在视图坐标系里画、不随设计变换缩放，才能和判定对齐。
+        if (appearance.showCollisionBox) {
+            val prevStyle = STROKE.style
+            val prevColor = STROKE.color
+            val prevWidth = STROKE.strokeWidth
+            STROKE.style = Paint.Style.STROKE
+            STROKE.color = COLLISION_BOX_COLOR
+            STROKE.strokeWidth = max(1f, h / 120f)
+            canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), STROKE)
+            canvas.drawLine(w * 0.5f, 0f, w * 0.5f, h.toFloat(), STROKE)
+            STROKE.style = prevStyle
+            STROKE.color = prevColor
+            STROKE.strokeWidth = prevWidth
+        }
     }
 
     /**
@@ -524,12 +546,26 @@ object TrioRenderer {
         mobileLevel: Int, levels: IntArray?, type: String?, role: Int, fg: Int,
         a: TrioAppearance, r: TrioAppearance.Ring,
     ) {
+        // 顶部开口：默认沿用 Ring 的固定角宽；开关打开时按实际文字测量。
+        val fitHalf = fittedTopHalfDeg(r.parts[0], type, level, a)
+        val fitOpen = fitHalf > 0f
+        val gapStart = if (fitOpen) {
+            (270f - fitHalf - r.arcStart()) / r.sweep()
+        } else {
+            r.gapStart()
+        }
+        val gapEnd = if (fitOpen) {
+            (270f + fitHalf - r.arcStart()) / r.sweep()
+        } else {
+            r.gapEnd()
+        }
         drawBattery(
-            c, level, role, fg, a, r.gapStart(), r.gapEnd(), r.sweep(), r.arcStart(), charging,
+            c, level, role, fg, a, gapStart, gapEnd, r.sweep(), r.arcStart(), charging,
             // 两侧放了珠排或组件时，圆弧要在 9 点/3 点处让出开口。
             openLeft = r.hasLeftDots || r.leftFlankHalfDeg > 0f,
             openRight = r.hasRightDots || r.rightFlankHalfDeg > 0f,
-            topHalfDeg = r.topHalfDeg, bottomHalfDeg = r.bottomHalfDeg,
+            topHalfDeg = if (fitOpen) fitHalf else r.topHalfDeg,
+            bottomHalfDeg = r.bottomHalfDeg,
             leftFlankHalfDeg = r.leftFlankHalfDeg, rightFlankHalfDeg = r.rightFlankHalfDeg,
         )
         for (z in 0 until 3) {
@@ -543,7 +579,7 @@ object TrioRenderer {
             val cx = TrioGeometry.B_CX
             val cy = when (z) {
                 0 -> TrioGeometry.ZONE_CY[0] - a.ringSpacingY.toFloat()
-                1 -> TrioGeometry.ZONE_CY[1]
+                1 -> TrioGeometry.zoneTextCy(1, a.ringStroke, a.ringCentreOnCircle)
                 else -> TrioGeometry.ZONE_CY[2] + a.ringSpacingY.toFloat()
             }
             val width = 78f - a.ringStroke - 2f * RING_SLOT_INSET
@@ -613,11 +649,23 @@ object TrioRenderer {
                         val want1 = TrioState.slotPresent(firstSlot) || TrioState.slotDisabled(firstSlot)
                         val want2 = TrioState.slotPresent(secondSlot) || TrioState.slotDisabled(secondSlot)
 
-                        val inward = 3.8f
+                        // 行距默认写死 3.8；打开跟随开关后按点径与点距参数推导。
+                        val inward = if (a.ringRowPitchFollow) {
+                            dotR * 0.9f * a.signalPitchFactor()
+                        } else {
+                            3.8f
+                        }
                         val r1 = rhoMid - inward
                         val dr = dotR * 2.65f
                         val r2 = r1 + dr
-                        val halfSpanAngle = Math.toRadians(24.5).toFloat()
+                        // 点距放大时给端帽留出 7° 余量，最外侧的点不会压到圆弧。
+                        val spanCap = Math.toRadians(
+                            (TrioGeometry.GAP_WIDTH_DEG * 0.5f - 7f).toDouble(),
+                        ).toFloat()
+                        val halfSpanAngle = minOf(
+                            Math.toRadians(24.5).toFloat() * a.signalPitchFactor(),
+                            spanCap,
+                        )
 
                         // Row 1: Order 1 (shifted inward for comfortable spacing)
                         if (want1) {
@@ -625,7 +673,12 @@ object TrioRenderer {
                                 val t = (dot - halfDiv) / halfDiv
                                 val angle = t * halfSpanAngle
                                 val x = r1 * kotlin.math.sin(angle)
-                                val y = (TrioGeometry.B_CY + sign * r1 * kotlin.math.cos(angle)) - TrioGeometry.ZONE_CY[z]
+                                val y = if (a.ringStackFlat) {
+                                    TrioGeometry.B_CY + sign * r1 - TrioGeometry.ZONE_CY[z]
+                                } else {
+                                    (TrioGeometry.B_CY + sign * r1 * kotlin.math.cos(angle)) -
+                                        TrioGeometry.ZONE_CY[z]
+                                }
                                 FILL.color = if (dot < active1) fg else inactive
                                 c.drawCircle(x, y, dotR, FILL)
                             }
@@ -636,7 +689,12 @@ object TrioRenderer {
                                 val t = (dot - halfDiv) / halfDiv
                                 val angle = t * halfSpanAngle
                                 val x = r2 * kotlin.math.sin(angle)
-                                val y = (TrioGeometry.B_CY + sign * r2 * kotlin.math.cos(angle)) - TrioGeometry.ZONE_CY[z]
+                                val y = if (a.ringStackFlat) {
+                                    TrioGeometry.B_CY + sign * r2 - TrioGeometry.ZONE_CY[z]
+                                } else {
+                                    (TrioGeometry.B_CY + sign * r2 * kotlin.math.cos(angle)) -
+                                        TrioGeometry.ZONE_CY[z]
+                                }
                                 FILL.color = if (dot < active2) fg else inactive
                                 c.drawCircle(x, y, dotR, FILL)
                             }
@@ -653,12 +711,19 @@ object TrioRenderer {
                         val inset = (dotR + ringStroke * 0.5f + 1f) / rho
                         val halfAngle = maxOf(0f, openingRad * 0.5f - inset)
                         val beadHalfAngle = Math.toRadians((TrioGeometry.BEAD_SPAN_DEG * 0.5f).toDouble()).toFloat()
-                        val halfCentreAngle = minOf(halfAngle, beadHalfAngle)
+                        // 点距参数拉开/收拢珠排的角跨；仍以开口内能容下为上限。
+                        val halfCentreAngle =
+                            minOf(halfAngle, beadHalfAngle * a.signalPitchFactor())
                         for (dot in 0 until columns) {
                             val t = (dot - halfDiv) / halfDiv
                             val angle = t * halfCentreAngle
                             val x = rho * kotlin.math.sin(angle)
-                            val y = (TrioGeometry.B_CY + sign * rho * kotlin.math.cos(angle)) - TrioGeometry.ZONE_CY[z]
+                            val y = if (a.ringStackFlat) {
+                                TrioGeometry.B_CY + sign * rho - TrioGeometry.ZONE_CY[z]
+                            } else {
+                                (TrioGeometry.B_CY + sign * rho * kotlin.math.cos(angle)) -
+                                    TrioGeometry.ZONE_CY[z]
+                            }
                             FILL.color = if (dot < active) fg else inactive
                             c.drawCircle(x, y, dotR, FILL)
                         }
@@ -792,6 +857,60 @@ object TrioRenderer {
     }
 
     /**
+     * 环开口按实际文字测量：返回顶部开口的角度半宽（度），`0` 表示沿用固定开口。
+     *
+     * 只在顶部放的是文字件、且开关打开时返回；宽度取文字在请求字号下的推进宽度，
+     * 加上端帽与一个半线宽的余量，再按圆半径换成角度。它描述的是「这句话需要多宽的
+     * 口子」，落笔时文字仍按开口弦宽拟合，因此只会更小，不会越界。
+     */
+    private fun fittedTopHalfDeg(
+        part: Int, type: String?, level: Int, a: TrioAppearance,
+    ): Float {
+        if (!a.ringTextFitOpening || part == Prefs.PART_NONE) return 0f
+        val text = ringTextFor(part, type, level, a) ?: return 0f
+        if (text.isEmpty()) return 0f
+        applyWeight(ringTextWeight(part, a))
+        TEXT.textSize = ringTextRequested(part, a)
+        val inkW = TEXT.measureText(text)
+        val clearance = TrioGeometry.NOTCH_PIECE_CLEARANCE +
+            a.ringStroke * TrioGeometry.RING_STROKE_RATIO * 0.5f
+        val ratio = ((inkW * 0.5f + clearance) / TrioGeometry.B_R).coerceIn(0f, 1f)
+        val half = Math.toDegrees(kotlin.math.asin(ratio.toDouble())).toFloat()
+        // 太窄会把字压在端帽上，太宽会把圆环切成两段；两头都收住。
+        return half.coerceIn(18f, 60f)
+    }
+
+    /** 环里一个文字件的显示字符串；非文字件返回 `null`。 */
+    private fun ringTextFor(part: Int, type: String?, level: Int, a: TrioAppearance): String? =
+        when (part) {
+            Prefs.PART_VALUE -> valueText(level, a)
+            Prefs.PART_TYPE -> a.displayType(type)
+            Prefs.PART_POWER, Prefs.PART_RUNNING -> powerText()
+            Prefs.PART_TEMP -> tempText()
+            Prefs.PART_FPS -> fpsText()
+            Prefs.PART_CLOCK -> TrioState.sClockText
+            else -> null
+        }
+
+    private fun ringTextWeight(part: Int, a: TrioAppearance): Int = when (part) {
+        Prefs.PART_VALUE -> a.valueWeight
+        Prefs.PART_TYPE -> a.typeWeight
+        Prefs.PART_POWER, Prefs.PART_RUNNING,
+        Prefs.PART_TEMP, Prefs.PART_FPS,
+        -> a.perfTypeWeight()
+        else -> a.clockWeight
+    }
+
+    private fun ringTextRequested(part: Int, a: TrioAppearance): Float = when (part) {
+        Prefs.PART_VALUE -> maxOf(a.valueSize.toFloat(), 50f)
+        Prefs.PART_TYPE -> maxOf(a.typeSize.toFloat(), 46f)
+        Prefs.PART_POWER, Prefs.PART_RUNNING,
+        Prefs.PART_TEMP, Prefs.PART_FPS,
+        -> maxOf(a.perfReadingSize().toFloat(), 46f)
+        else -> maxOf(a.clockSize.toFloat(), 46f)
+    }
+
+    /**
      * 环里的一段读数：上下/中部的一个带宽，或侧边的一个单元格。
      *
      * `band` 为负表示侧边，此时可用的宽度是为它切出的单元格，而不是带宽的弦；
@@ -804,7 +923,7 @@ object TrioRenderer {
         val flank = band < 0
         val text = when (part) {
             Prefs.PART_VALUE -> valueText(level, a)
-            Prefs.PART_TYPE -> type
+            Prefs.PART_TYPE -> a.displayType(type)
             Prefs.PART_POWER -> powerText()
             Prefs.PART_RUNNING -> powerText()
             Prefs.PART_TEMP -> tempText()
@@ -845,7 +964,15 @@ object TrioRenderer {
             val roomW = if (flank) {
                 flankRoomW
             } else {
-                TrioGeometry.zoneTextRoomW(band, a.ringStroke, inkH)
+                val base = TrioGeometry.zoneTextRoomW(
+                    band, a.ringStroke, inkH, a.ringCentreOnCircle,
+                )
+                // 开口里的读数两端各内缩半个「实际画出的」体部线宽；中间带不受影响。
+                if (a.openingTextInset && band != 1) {
+                    maxOf(0f, base - a.ringStroke * TrioGeometry.RING_STROKE_RATIO)
+                } else {
+                    base
+                }
             }
             val next = min(maxByHeight, fitSize(text, requested, roomW, suffixScale))
             if (abs(next - fitted) < 0.05f) {
@@ -858,7 +985,8 @@ object TrioRenderer {
         val slotCentre = if (flank) {
             0f
         } else {
-            TrioGeometry.zoneTextCy(band, a.ringStroke) - TrioGeometry.ZONE_CY[band]
+            TrioGeometry.zoneTextCy(band, a.ringStroke, a.ringCentreOnCircle) -
+                TrioGeometry.ZONE_CY[band]
         }
         val baseline = inkCentredBaseline(text, fitted, slotCentre)
         if (part == Prefs.PART_TYPE) {
@@ -1833,7 +1961,13 @@ object TrioRenderer {
         TEXT.color = fg
         TEXT.textAlign = Paint.Align.CENTER
         val x = alignedCx(anchorX, TEXT.measureText(text), align)
-        c.drawText(text, x, cy + (size * TrioGeometry.CAP_HEIGHT_RATIO) * 0.5f, TEXT)
+        // 默认按字体度量落基线；开关打开后改用这一串字实际墨迹的中心。
+        val baseline = if (a.clockInkCentre) {
+            inkCentredBaseline(text, size, cy)
+        } else {
+            cy + (size * TrioGeometry.CAP_HEIGHT_RATIO) * 0.5f
+        }
+        c.drawText(text, x, baseline, TEXT)
     }
 
     private fun drawCapsuleValue(
@@ -2807,7 +2941,7 @@ object TrioRenderer {
 
         fun ringZoneCy(z: Int): Float = when (z) {
             0 -> TrioGeometry.ZONE_CY[0] - a.ringSpacingY.toFloat()
-            1 -> TrioGeometry.ZONE_CY[1]
+            1 -> TrioGeometry.zoneTextCy(1, a.ringStroke, a.ringCentreOnCircle)
             else -> TrioGeometry.ZONE_CY[2] + a.ringSpacingY.toFloat()
         }
 
@@ -3743,7 +3877,7 @@ object TrioRenderer {
      */
     private fun outPitch(a: TrioAppearance?, dual: Boolean = true): Float {
         val rows = rowsStyle(a, dual)
-        return if (rows) {
+        val base = if (rows) {
             // The compact style's own reference: 1.6dp bars on a 0.9dp gap across a
             // 6.2dp row, i.e. everything is a fixed fraction of the row height.
             TrioGeometry.STACK_ROW_H * (ROW_BAR + ROW_GAP)
@@ -3751,6 +3885,7 @@ object TrioRenderer {
             // The reference's own pitch: 39-unit bars on a 28-unit gap.
             TrioGeometry.STACK_PITCH
         }
+        return base * (a?.signalPitchFactor() ?: 1f)
     }
 
     /** Columns per row: 4 (default) or 5, adapting proportions harmoniously. */
@@ -3776,12 +3911,14 @@ object TrioRenderer {
 
     private fun level4(level: Int): Int = level.coerceIn(0, TrioGeometry.STACK_COLUMNS)
 
-    private fun outBarWidth(a: TrioAppearance?, dual: Boolean = true): Float =
-        if (rowsStyle(a, dual)) {
+    private fun outBarWidth(a: TrioAppearance?, dual: Boolean = true): Float {
+        val base = if (rowsStyle(a, dual)) {
             TrioGeometry.STACK_ROW_H * ROW_BAR
         } else {
             TrioGeometry.STACK_BAR_W
         }
+        return base * (a?.signalBarWidthFactor() ?: 1f)
+    }
 
     private fun outLabelGap(a: TrioAppearance?, dual: Boolean = true): Float =
         if (rowsStyle(a, dual)) {
@@ -3902,7 +4039,8 @@ object TrioRenderer {
             val rowH = TrioGeometry.STACK_ROW_H
             return rowH * 2f + rowsGap(a)
         }
-        val dotD = TrioGeometry.STACK_DOT_D * ((a?.outDotSize ?: 100) / 100f)
+        val dotD = TrioGeometry.STACK_DOT_D * ((a?.outDotSize ?: 100) / 100f) *
+            (a?.signalBarWidthFactor() ?: 1f)
         val barsH = TrioGeometry.STACK_BAR_H[TrioGeometry.STACK_COLUMNS - 1]
         if (!dual) return barsH
         val gap = if (a != null) rowGap(a, barsH + dotD) else TrioGeometry.STACK_DOT_GAP
@@ -3926,7 +4064,7 @@ object TrioRenderer {
             val barsH = barHeights[columns - 1]
             val dotScale = a.outDotSize / 100f
             val baseDotD = if (columns == 5) 31f else TrioGeometry.STACK_DOT_D
-            val dotD = baseDotD * dotScale
+            val dotD = baseDotD * dotScale * a.signalBarWidthFactor()
             val gap = rowGap(a, barsH + dotD)
             barsH + gap + dotD
         }
@@ -4112,8 +4250,11 @@ object TrioRenderer {
     fun drawOutSignal(
         c: Canvas, width: Int, height: Int, bars: Int, dots: Int,
         fg: Int, a: TrioAppearance,
-        type: String? = null, type2: String? = null,
+        rawType: String? = null, rawType2: String? = null,
     ): Boolean {
+        // 环外读数的类型文本与环内共用同一条「5GA → 5A」规则。
+        val type = a.displayType(rawType)
+        val type2 = a.displayType(rawType2)
         if (bars < 0 || width <= 0 || height <= 0) {
             return false
         }
@@ -4129,7 +4270,7 @@ object TrioRenderer {
         val labelW = inkW - barRun
         val dotScale = a.outDotSize / 100f
         val baseDotD = if (columns == 5) 31f else TrioGeometry.STACK_DOT_D
-        val dotD = baseDotD * dotScale
+        val dotD = baseDotD * dotScale * a.signalBarWidthFactor()
         val barsH = barHeights[columns - 1]
         val gap = if (dotRow) rowGap(a, barsH + dotD) else 0f
         val inkH = if (dotRow) barsH + gap + dotD else barsH

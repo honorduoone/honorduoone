@@ -124,9 +124,16 @@ internal object TrioHooks {
     }
 
     private fun onScreenStateChanged(screenOn: Boolean) {
+        // 顺序有意义：先翻可见性判定，再让行同步。
+        //
+        // 行同步的熄屏分支会把电池置回 VISIBLE，而这次写入要过 setFlags 钩子再问一次
+        // isOwned；若那时判定里还留着「亮屏」的旧值，刚交还的电池会当场被再藏一次。
+        // 藏它的若是宿主机在 AOD 里新膨胀出来的那个电池实例，登记表里没有它，后面
+        // 就没人把它接回来——表现正是息屏电量时有时无，取决于这次写入和 AOD 布局
+        // 谁先跑到。
+        StatusBarIconManager.onScreenStateChanged(screenOn)
         StatusBarRowManager.onScreenStateChanged(screenOn)
         BarClockManager.onScreenStateChanged(screenOn)
-        StatusBarIconManager.onScreenStateChanged(screenOn)
         if (screenOn) {
             TrioState.ensureDataActivitySampler()
             // 熄屏时卡状态采样停摆，亮屏立刻恢复并读一次。

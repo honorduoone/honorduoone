@@ -292,7 +292,7 @@
     <string name="perf_fps_title">帧率显示</string>
 
     <string name="glyph_scale_title">图标整体尺寸</string>
-    <string name="glyph_scale_summary" formatted="false">默认 100%，可调 60–100%。</string>
+    <string name="glyph_scale_summary" formatted="false">默认 100%，可调 60–130%。</string>
 
     <string name="perf_scale_title">读数整体尺寸</string>
     <string name="perf_scale_summary" formatted="false">默认 100%，可调 60–150%；作用于模块绘制的全部读数文字。</string>
@@ -333,7 +333,7 @@
     <string name="stroke_summary_rect">默认 14dp，可调 4–16dp。</string>
 
     <string name="wifi_scale_title">Wi-Fi 弧尺寸</string>
-    <string name="wifi_scale_summary">默认 100%，可调 60–160%。在各自样式的适配空间内放大。</string>
+    <string name="wifi_scale_summary" formatted="false">默认 100%，可调 60–160%。在各自样式的适配空间内放大。</string>
     <string name="arc_stroke_title">弧线粗细</string>
     <string name="arc_stroke_summary">默认 12dp，可调 3–16dp。</string>
     <string name="arc_stroke_summary_rect">默认 12dp，可调 3–16dp。</string>
@@ -490,7 +490,7 @@
     <string name="perf_temp_charging_only_summary">开启后温度随功率一起出现和消失。</string>
     <!-- Capsule interior padding: the margin each cell keeps from its cap. -->
     <string name="cap_gap_title">胶囊内边距</string>
-    <string name="cap_gap_summary">100% 为默认内边距，0% 内容贴紧两端圆角；只影响内容，不改胶囊宽度。</string>
+    <string name="cap_gap_summary" formatted="false">100% 为默认内边距，0% 内容贴紧两端圆角；只影响内容，不改胶囊宽度。</string>
     <!-- Capsule length and interior cell nudges, in design units. -->
     <string name="capsule_length_title">胶囊长度</string>
     <string name="capsule_length_summary">默认 0，可调 -30 到 60。加长的是两端圆角之间的直线段，胶囊随之变宽，圆角与高度不变。</string>
@@ -506,6 +506,32 @@
     <string name="ring_spacing_x_summary">调整圆环左右两段圆弧与中间内容的水平间距，正值向外展开，负值向内收拢。</string>
     <string name="ring_spacing_y_title">圆环上下间距</string>
     <string name="ring_spacing_y_summary">调整圆环顶部和底部内容与中间内容的垂直间距，正值向外扩大，负值向内紧凑。</string>
+
+    <string name="signal_pitch_title">信号点间距</string>
+    <string name="signal_pitch_summary" formatted="false">环外信号的列间距与环内点距，默认 100%，可调 60–200%。</string>
+    <string name="signal_bar_width_title">信号条粗细</string>
+    <string name="signal_bar_width_summary" formatted="false">环外信号柱与信号点的宽度，默认 100%，可调 40–200%。</string>
+    <string name="ring_fit_opening_title">开口按文字测量</string>
+    <string name="ring_fit_opening_summary">按顶部实际文字的墨迹宽度决定圆环开口宽度；关闭时沿用固定开口。</string>
+    <string name="ring_centre_circle_title">中部以圆心为准</string>
+    <string name="ring_centre_circle_summary">圆环中间一档的槽心对齐圆心；关闭时沿用比圆心低约 2.5 单位的槽心。</string>
+    <string name="type_short_5a_title">5GA 显示为 5A</string>
+    <string name="type_short_5a_summary">把网络类型里的「5GA」写成「5A」；只改显示，不影响识别。</string>
+    <string name="ring_stack_flat_title">环内信号平铺</string>
+    <string name="ring_stack_flat_summary">环内信号点排成水平直线而不是沿圆弧弯折；关闭时沿弧。</string>
+    <string name="clock_ink_centre_title">时钟按墨迹居中</string>
+    <string name="clock_ink_centre_summary">时钟按这一串字的实际墨迹居中，而不是按字体整体度量；对数字更准。</string>
+    <string name="opening_text_inset_title">开口读数内缩</string>
+    <string name="opening_text_inset_summary">开口里的读数两端再让出半个体部线宽，避免贴住圆环端帽。</string>
+    <string name="ring_row_pitch_title">行距跟随点径</string>
+    <string name="ring_row_pitch_summary">环内两排信号点的行距由点径与信号点间距推算，替代写死的 3.8。</string>
+    <string name="show_collision_box_title">显示碰撞盒</string>
+    <string name="show_collision_box_summary">用洋红方框标出模块占用的矩形，用来核对灵动胶囊展开时的让位判定；仅调试用。</string>
+    <string name="group_conflict">模块冲突</string>
+    <string name="conflict_title">冲突提示</string>
+    <string name="conflict_summary">在关于页提示是否装了其它状态栏类模块，避免多个模块同时改同一条状态栏。</string>
+    <string name="conflict_none">未检测到已安装的同类状态栏模块。</string>
+    <string name="conflict_found">检测到已安装：%1$s。请在 LSPosed 中只保留一个模块作用于「系统界面」，否则会出现图标闪烁或样式互相覆盖。</string>
 
     <string name="group_launcher_icon">桌面图标</string>
     <string name="group_diagnostics">诊断</string>

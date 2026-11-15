@@ -352,6 +352,30 @@ class TrioAppearance(c: TrioSettings) {
     @JvmField val ringStroke: Int = c.ringStroke
     @JvmField val arcStroke: Int = c.arcStroke
     @JvmField val trackAlpha: Int = c.trackAlpha
+
+    /** 信号点间距百分比（环外列距 + 环内点距）；见 [Prefs.KEY_SIGNAL_PITCH]。 */
+    @JvmField val signalPitch: Int = c.signalPitch
+    /** 信号条粗细百分比；见 [Prefs.KEY_SIGNAL_BAR_WIDTH]。 */
+    @JvmField val signalBarWidth: Int = c.signalBarWidth
+    /** 环开口按实际文字测量；见 [Prefs.KEY_RING_TEXT_FIT_OPENING]。 */
+    @JvmField val ringTextFitOpening: Boolean = c.ringTextFitOpening
+    /** 圆环中部以圆心为基准；见 [Prefs.KEY_RING_CENTRE_ON_CIRCLE]。 */
+    @JvmField val ringCentreOnCircle: Boolean = c.ringCentreOnCircle
+    /** 5GA 显示为 5A；见 [Prefs.KEY_TYPE_SHORT_5A]。 */
+    @JvmField val typeShort5A: Boolean = c.typeShort5A
+    /** 环内信号点平铺；见 [Prefs.KEY_RING_STACK_FLAT]。 */
+    @JvmField val ringStackFlat: Boolean = c.ringStackFlat
+    /** 时钟按逐字墨迹居中；见 [Prefs.KEY_CLOCK_INK_CENTRE]。 */
+    @JvmField val clockInkCentre: Boolean = c.clockInkCentre
+    /** 开口读数两端内缩；见 [Prefs.KEY_OPENING_TEXT_INSET]。 */
+    @JvmField val openingTextInset: Boolean = c.openingTextInset
+    /** 环内两排行距跟随点径与间距；见 [Prefs.KEY_RING_ROW_PITCH_FOLLOW]。 */
+    @JvmField val ringRowPitchFollow: Boolean = c.ringRowPitchFollow
+    /** 绘制碰撞盒（调试）；见 [Prefs.KEY_SHOW_COLLISION_BOX]。 */
+    @JvmField val showCollisionBox: Boolean = c.showCollisionBox
+    /** 关于页冲突提示；见 [Prefs.KEY_CONFLICT_WARNING]。 */
+    @JvmField val conflictWarning: Boolean = c.conflictWarning
+
     @JvmField val valueSize: Int = c.valueSize
     @JvmField val valueWeight: Int = c.valueWeight
 
@@ -586,6 +610,17 @@ class TrioAppearance(c: TrioSettings) {
     /** The ring's level-dot size multiplier, 1.0 for the bead the stroke implies. */
     fun dotScaleFactor(): Float =
         Prefs.clamp(dotScale, Prefs.MIN_DOT_SCALE, Prefs.MAX_DOT_SCALE) / 100f
+
+    /** 信号点间距倍率，1.0 = 现状。 */
+    fun signalPitchFactor(): Float =
+        Prefs.clamp(signalPitch, Prefs.MIN_SIGNAL_PITCH, Prefs.MAX_SIGNAL_PITCH) / 100f
+
+    /** 信号条粗细倍率，1.0 = 现状。 */
+    fun signalBarWidthFactor(): Float =
+        Prefs.clamp(signalBarWidth, Prefs.MIN_SIGNAL_BAR_WIDTH, Prefs.MAX_SIGNAL_BAR_WIDTH) / 100f
+
+    /** 网络类型的显示文本：开启「5A」时把 5GA 收成 5A，其它值原样返回。 */
+    fun displayType(type: String?): String? = if (typeShort5A) type?.replace("5GA", "5A") else type
 
     /**
      * Whether the performance strip is drawn at all.

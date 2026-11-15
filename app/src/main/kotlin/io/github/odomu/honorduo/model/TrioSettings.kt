@@ -81,6 +81,40 @@ class TrioSettings {
     var ringSpacingX = Prefs.DEF_RING_SPACING_X
     @JvmField
     var ringSpacingY = Prefs.DEF_RING_SPACING_Y
+
+    /** 信号点间距百分比（环外列距 + 环内点距）；见 [Prefs.KEY_SIGNAL_PITCH]。 */
+    @JvmField
+    var signalPitch = Prefs.DEF_SIGNAL_PITCH
+    /** 信号条粗细百分比；见 [Prefs.KEY_SIGNAL_BAR_WIDTH]。 */
+    @JvmField
+    var signalBarWidth = Prefs.DEF_SIGNAL_BAR_WIDTH
+    /** 环开口按实际文字测量；见 [Prefs.KEY_RING_TEXT_FIT_OPENING]。 */
+    @JvmField
+    var ringTextFitOpening = Prefs.DEF_RING_TEXT_FIT_OPENING
+    /** 圆环中部以圆心为基准；见 [Prefs.KEY_RING_CENTRE_ON_CIRCLE]。 */
+    @JvmField
+    var ringCentreOnCircle = Prefs.DEF_RING_CENTRE_ON_CIRCLE
+    /** 5GA 显示为 5A；见 [Prefs.KEY_TYPE_SHORT_5A]。 */
+    @JvmField
+    var typeShort5A = Prefs.DEF_TYPE_SHORT_5A
+    /** 环内信号点平铺；见 [Prefs.KEY_RING_STACK_FLAT]。 */
+    @JvmField
+    var ringStackFlat = Prefs.DEF_RING_STACK_FLAT
+    /** 时钟按逐字墨迹居中；见 [Prefs.KEY_CLOCK_INK_CENTRE]。 */
+    @JvmField
+    var clockInkCentre = Prefs.DEF_CLOCK_INK_CENTRE
+    /** 开口读数两端按体部内边距内缩；见 [Prefs.KEY_OPENING_TEXT_INSET]。 */
+    @JvmField
+    var openingTextInset = Prefs.DEF_OPENING_TEXT_INSET
+    /** 环内两排行距跟随点径与间距；见 [Prefs.KEY_RING_ROW_PITCH_FOLLOW]。 */
+    @JvmField
+    var ringRowPitchFollow = Prefs.DEF_RING_ROW_PITCH_FOLLOW
+    /** 绘制碰撞盒（调试）；见 [Prefs.KEY_SHOW_COLLISION_BOX]。 */
+    @JvmField
+    var showCollisionBox = Prefs.DEF_SHOW_COLLISION_BOX
+    /** 关于页冲突提示；见 [Prefs.KEY_CONFLICT_WARNING]。 */
+    @JvmField
+    var conflictWarning = Prefs.DEF_CONFLICT_WARNING
     @JvmField
     var replaceWifiIcon = Prefs.DEF_REPLACE_WIFI_ICON
     @JvmField
@@ -699,6 +733,29 @@ class TrioSettings {
                 p.getInt(Prefs.KEY_RING_SPACING_Y, Prefs.DEF_RING_SPACING_Y),
                 Prefs.MIN_RING_SPACING_Y, Prefs.MAX_RING_SPACING_Y,
             )
+            s.signalPitch = Prefs.clamp(
+                p.getInt(Prefs.KEY_SIGNAL_PITCH, Prefs.DEF_SIGNAL_PITCH),
+                Prefs.MIN_SIGNAL_PITCH, Prefs.MAX_SIGNAL_PITCH,
+            )
+            s.signalBarWidth = Prefs.clamp(
+                p.getInt(Prefs.KEY_SIGNAL_BAR_WIDTH, Prefs.DEF_SIGNAL_BAR_WIDTH),
+                Prefs.MIN_SIGNAL_BAR_WIDTH, Prefs.MAX_SIGNAL_BAR_WIDTH,
+            )
+            s.ringTextFitOpening =
+                p.getBoolean(Prefs.KEY_RING_TEXT_FIT_OPENING, Prefs.DEF_RING_TEXT_FIT_OPENING)
+            s.ringCentreOnCircle =
+                p.getBoolean(Prefs.KEY_RING_CENTRE_ON_CIRCLE, Prefs.DEF_RING_CENTRE_ON_CIRCLE)
+            s.typeShort5A = p.getBoolean(Prefs.KEY_TYPE_SHORT_5A, Prefs.DEF_TYPE_SHORT_5A)
+            s.ringStackFlat = p.getBoolean(Prefs.KEY_RING_STACK_FLAT, Prefs.DEF_RING_STACK_FLAT)
+            s.clockInkCentre = p.getBoolean(Prefs.KEY_CLOCK_INK_CENTRE, Prefs.DEF_CLOCK_INK_CENTRE)
+            s.openingTextInset =
+                p.getBoolean(Prefs.KEY_OPENING_TEXT_INSET, Prefs.DEF_OPENING_TEXT_INSET)
+            s.ringRowPitchFollow =
+                p.getBoolean(Prefs.KEY_RING_ROW_PITCH_FOLLOW, Prefs.DEF_RING_ROW_PITCH_FOLLOW)
+            s.showCollisionBox =
+                p.getBoolean(Prefs.KEY_SHOW_COLLISION_BOX, Prefs.DEF_SHOW_COLLISION_BOX)
+            s.conflictWarning =
+                p.getBoolean(Prefs.KEY_CONFLICT_WARNING, Prefs.DEF_CONFLICT_WARNING)
             s.replaceWifiIcon = p.getBoolean(Prefs.KEY_REPLACE_WIFI_ICON, Prefs.DEF_REPLACE_WIFI_ICON)
             s.replaceStatusIcon = p.getBoolean(Prefs.KEY_REPLACE_STATUS_ICON, Prefs.DEF_REPLACE_STATUS_ICON)
             s.trioMorph = p.getBoolean(Prefs.KEY_TRIO_MORPH, Prefs.DEF_TRIO_MORPH)
@@ -1044,6 +1101,30 @@ class TrioSettings {
                 bundle.getInt(Prefs.KEY_RING_SPACING_Y, Prefs.DEF_RING_SPACING_Y),
                 Prefs.MIN_RING_SPACING_Y, Prefs.MAX_RING_SPACING_Y,
             )
+            s.signalPitch = Prefs.clamp(
+                bundle.getInt(Prefs.KEY_SIGNAL_PITCH, Prefs.DEF_SIGNAL_PITCH),
+                Prefs.MIN_SIGNAL_PITCH, Prefs.MAX_SIGNAL_PITCH,
+            )
+            s.signalBarWidth = Prefs.clamp(
+                bundle.getInt(Prefs.KEY_SIGNAL_BAR_WIDTH, Prefs.DEF_SIGNAL_BAR_WIDTH),
+                Prefs.MIN_SIGNAL_BAR_WIDTH, Prefs.MAX_SIGNAL_BAR_WIDTH,
+            )
+            s.ringTextFitOpening =
+                bundle.getBoolean(Prefs.KEY_RING_TEXT_FIT_OPENING, Prefs.DEF_RING_TEXT_FIT_OPENING)
+            s.ringCentreOnCircle =
+                bundle.getBoolean(Prefs.KEY_RING_CENTRE_ON_CIRCLE, Prefs.DEF_RING_CENTRE_ON_CIRCLE)
+            s.typeShort5A = bundle.getBoolean(Prefs.KEY_TYPE_SHORT_5A, Prefs.DEF_TYPE_SHORT_5A)
+            s.ringStackFlat = bundle.getBoolean(Prefs.KEY_RING_STACK_FLAT, Prefs.DEF_RING_STACK_FLAT)
+            s.clockInkCentre =
+                bundle.getBoolean(Prefs.KEY_CLOCK_INK_CENTRE, Prefs.DEF_CLOCK_INK_CENTRE)
+            s.openingTextInset =
+                bundle.getBoolean(Prefs.KEY_OPENING_TEXT_INSET, Prefs.DEF_OPENING_TEXT_INSET)
+            s.ringRowPitchFollow =
+                bundle.getBoolean(Prefs.KEY_RING_ROW_PITCH_FOLLOW, Prefs.DEF_RING_ROW_PITCH_FOLLOW)
+            s.showCollisionBox =
+                bundle.getBoolean(Prefs.KEY_SHOW_COLLISION_BOX, Prefs.DEF_SHOW_COLLISION_BOX)
+            s.conflictWarning =
+                bundle.getBoolean(Prefs.KEY_CONFLICT_WARNING, Prefs.DEF_CONFLICT_WARNING)
             s.replaceWifiIcon = bundle.getBoolean(Prefs.KEY_REPLACE_WIFI_ICON, Prefs.DEF_REPLACE_WIFI_ICON)
             s.replaceStatusIcon = bundle.getBoolean(Prefs.KEY_REPLACE_STATUS_ICON, Prefs.DEF_REPLACE_STATUS_ICON)
             s.trioMorph = bundle.getBoolean(Prefs.KEY_TRIO_MORPH, Prefs.DEF_TRIO_MORPH)
@@ -1538,6 +1619,17 @@ class TrioSettings {
         s.capsuleRightDy = capsuleRightDy
         s.ringSpacingX = ringSpacingX
         s.ringSpacingY = ringSpacingY
+        s.signalPitch = signalPitch
+        s.signalBarWidth = signalBarWidth
+        s.ringTextFitOpening = ringTextFitOpening
+        s.ringCentreOnCircle = ringCentreOnCircle
+        s.typeShort5A = typeShort5A
+        s.ringStackFlat = ringStackFlat
+        s.clockInkCentre = clockInkCentre
+        s.openingTextInset = openingTextInset
+        s.ringRowPitchFollow = ringRowPitchFollow
+        s.showCollisionBox = showCollisionBox
+        s.conflictWarning = conflictWarning
         s.mobileTypeMode = mobileTypeMode
         s.valueCentred = valueCentred
         s.navStyle = navStyle
@@ -1692,6 +1784,17 @@ class TrioSettings {
             Prefs.KEY_CAPSULE_RIGHT_DY -> capsuleRightDy = src.capsuleRightDy
             Prefs.KEY_RING_SPACING_X -> ringSpacingX = src.ringSpacingX
             Prefs.KEY_RING_SPACING_Y -> ringSpacingY = src.ringSpacingY
+            Prefs.KEY_SIGNAL_PITCH -> signalPitch = src.signalPitch
+            Prefs.KEY_SIGNAL_BAR_WIDTH -> signalBarWidth = src.signalBarWidth
+            Prefs.KEY_RING_TEXT_FIT_OPENING -> ringTextFitOpening = src.ringTextFitOpening
+            Prefs.KEY_RING_CENTRE_ON_CIRCLE -> ringCentreOnCircle = src.ringCentreOnCircle
+            Prefs.KEY_TYPE_SHORT_5A -> typeShort5A = src.typeShort5A
+            Prefs.KEY_RING_STACK_FLAT -> ringStackFlat = src.ringStackFlat
+            Prefs.KEY_CLOCK_INK_CENTRE -> clockInkCentre = src.clockInkCentre
+            Prefs.KEY_OPENING_TEXT_INSET -> openingTextInset = src.openingTextInset
+            Prefs.KEY_RING_ROW_PITCH_FOLLOW -> ringRowPitchFollow = src.ringRowPitchFollow
+            Prefs.KEY_SHOW_COLLISION_BOX -> showCollisionBox = src.showCollisionBox
+            Prefs.KEY_CONFLICT_WARNING -> conflictWarning = src.conflictWarning
             Prefs.KEY_SHOW_MOBILE_ACTIVITY -> showMobileActivity = src.showMobileActivity
             Prefs.KEY_MOBILE_TYPE_MODE -> mobileTypeMode = src.mobileTypeMode
             Prefs.KEY_VALUE_CENTRED -> valueCentred = src.valueCentred
@@ -1846,6 +1949,17 @@ class TrioSettings {
         putInt(Prefs.KEY_CAPSULE_RIGHT_DY, capsuleRightDy)
         putInt(Prefs.KEY_RING_SPACING_X, ringSpacingX)
         putInt(Prefs.KEY_RING_SPACING_Y, ringSpacingY)
+        putInt(Prefs.KEY_SIGNAL_PITCH, signalPitch)
+        putInt(Prefs.KEY_SIGNAL_BAR_WIDTH, signalBarWidth)
+        putBoolean(Prefs.KEY_RING_TEXT_FIT_OPENING, ringTextFitOpening)
+        putBoolean(Prefs.KEY_RING_CENTRE_ON_CIRCLE, ringCentreOnCircle)
+        putBoolean(Prefs.KEY_TYPE_SHORT_5A, typeShort5A)
+        putBoolean(Prefs.KEY_RING_STACK_FLAT, ringStackFlat)
+        putBoolean(Prefs.KEY_CLOCK_INK_CENTRE, clockInkCentre)
+        putBoolean(Prefs.KEY_OPENING_TEXT_INSET, openingTextInset)
+        putBoolean(Prefs.KEY_RING_ROW_PITCH_FOLLOW, ringRowPitchFollow)
+        putBoolean(Prefs.KEY_SHOW_COLLISION_BOX, showCollisionBox)
+        putBoolean(Prefs.KEY_CONFLICT_WARNING, conflictWarning)
         putInt(Prefs.styledKey(Prefs.KEY_MOBILE_TYPE_MODE, style), mobileTypeMode)
         putBoolean(Prefs.styledKey(Prefs.KEY_SHOW_MOBILE_ACTIVITY, style), showMobileActivity)
         putBoolean(Prefs.styledKey(Prefs.KEY_VALUE_CENTRED, style), valueCentred)
@@ -1991,6 +2105,17 @@ class TrioSettings {
             capsuleRightDy == other.capsuleRightDy &&
             ringSpacingX == other.ringSpacingX &&
             ringSpacingY == other.ringSpacingY &&
+            signalPitch == other.signalPitch &&
+            signalBarWidth == other.signalBarWidth &&
+            ringTextFitOpening == other.ringTextFitOpening &&
+            ringCentreOnCircle == other.ringCentreOnCircle &&
+            typeShort5A == other.typeShort5A &&
+            ringStackFlat == other.ringStackFlat &&
+            clockInkCentre == other.clockInkCentre &&
+            openingTextInset == other.openingTextInset &&
+            ringRowPitchFollow == other.ringRowPitchFollow &&
+            showCollisionBox == other.showCollisionBox &&
+            conflictWarning == other.conflictWarning &&
             mobileTypeMode == other.mobileTypeMode &&
             showMobileActivity == other.showMobileActivity &&
             valueCentred == other.valueCentred &&
